@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyDiag DTG - ADN Analysimmo</title>
+    <title>MyDiag DTG - Expert</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root { --adn-blue: #101844; --adn-gold: #c5a059; --bg: #f4f6f9; }
@@ -17,24 +17,23 @@
         .view { display: none; }
         .view.active { display: block; }
 
-        /* Accueil Retouchée */
+        /* Accueil */
         .welcome-card { background: white; border-radius: 15px; padding: 35px 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e1e4e8; }
-        .welcome-card h1 { margin: 0; color: var(--adn-blue); font-size: 1.6rem; margin-bottom: 25px; }
+        .welcome-card h1 { margin: 0 0 25px 0; color: var(--adn-blue); font-size: 1.6rem; }
         
         .input-group { text-align: left; margin-bottom: 20px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.85rem; color: #555; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 14px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; box-sizing: border-box; background: #fff; }
         
-        /* Focus Dossier Numérique */
         input#fileNumber { font-weight: bold; letter-spacing: 2px; color: var(--adn-blue); }
 
         .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 15px; border: 1px solid #eee; }
         .btn-action { background: var(--adn-blue); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; margin: 10px 0; font-size: 0.9rem; }
+        .btn-gallery { background: #546e7a; color: white; } /* Bouton spécifique galerie */
         .btn-save { background: #27ae60; color: white; }
 
         .comment-list { display: grid; gap: 8px; margin-top: 15px; }
         .comment-item { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.85rem; cursor: pointer; }
-        .comment-item:active { background: #e2e8f0; }
 
         .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 20px; }
         .gallery img { width: 100%; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
@@ -57,15 +56,13 @@
     <div id="view-DASHBOARD" class="view active">
         <div class="welcome-card">
             <h1>MyDiag DTG</h1>
-            
             <div class="input-group">
                 <label>N° de dossier (6 chiffres max) :</label>
-                <input type="number" id="fileNumber" inputmode="numeric" pattern="[0-9]*" placeholder="000000" oninput="limitAndSave(this)">
+                <input type="number" id="fileNumber" inputmode="numeric" pattern="[0-9]*" placeholder="000000" oninput="limit6(this)">
             </div>
-
             <div class="input-group">
                 <label>Nom de la Copropriété :</label>
-                <input type="text" id="projName" placeholder="Ex: Résidence Les Cyprès" oninput="save()">
+                <input type="text" id="projName" placeholder="Ex: Résidence Analysimmo" oninput="save()">
             </div>
         </div>
     </div>
@@ -75,14 +72,18 @@
         <div class="card">
             <label>Ouvrage :</label>
             <select id="subPoste" onchange="loadExcel()"></select>
-            <button class="btn-action" onclick="document.getElementById('camIn').click()">📸 PRENDRE PHOTO</button>
-            <input type="file" id="camIn" accept="image/*" capture="camera" style="display:none" onchange="onLoad(event)">
+            
+            <button class="btn-action" onclick="openMedia('camera')">📸 PRENDRE UNE PHOTO</button>
+            <button class="btn-action btn-gallery" onclick="openMedia('library')">🖼️ CHOISIR DANS LA GALERIE</button>
+            
+            <input type="file" id="inputCam" accept="image/*" capture="camera" style="display:none" onchange="onFile(event)">
+            <input type="file" id="inputLib" accept="image/*" style="display:none" onchange="onFile(event)">
         </div>
 
         <div id="editor" class="card" style="display:none; border: 2px solid var(--adn-gold);">
             <textarea id="finalTxt" rows="3"></textarea>
             <div id="commentBox" class="comment-list"></div>
-            <button class="btn-action btn-save" onclick="savePhoto()">💾 VALIDER & SAUVER</button>
+            <button class="btn-action btn-save" onclick="savePhoto()">💾 VALIDER & SAUVER PNG</button>
         </div>
 
         <div class="gallery" id="gal"></div>
@@ -91,7 +92,7 @@
     <div id="view-EXPORT" class="view">
         <div class="card">
             <h2>Fin de mission</h2>
-            <button class="btn-action" onclick="exportHTML()" style="background:#444">📄 VISIONNEUSE HTML PC</button>
+            <button class="btn-action" onclick="exportHTML()" style="background:#444">📄 VISIONNEUSE PC</button>
             <button class="btn-action" onclick="exportZIP()" style="background:var(--adn-gold)">📦 EXPORT ZIP (PNG)</button>
         </div>
     </div>
@@ -100,43 +101,32 @@
 <canvas id="canvas-hidden"></canvas>
 
 <script>
-    // Configuration de votre clé API OpenAI (à remplir ici une fois pour toutes)
     const MY_API_KEY = "AIzaSyALgB9zjGn0d7X7z5WeelO2vMEYTwwx-Fc";
 
     const DB = {
         'ENVELOPPE': {
-            'FONDATIONS': ["FONDATIONS : OK.", "Fissures obliques en façade."],
-            'MURS ET FAÇADES': ["Pierre apparentes.", "Béton banché.", "Épaufrures de béton.", "Défaut d'enrobage."],
-            'COUVERTURE': ["Tuiles mécanique.", "Toit-terrasse PVC.", "Chéneaux encombrés."],
+            'MURS ET FAÇADES': ["Pierre apparentes.", "Épaufrures de béton.", "Fissures structurelles."],
+            'COUVERTURE': ["Tuiles mécanique.", "Toit-terrasse PVC."],
             'BALCONS': ["Garde-corps conformes.", "Oxydation des fers."],
-            'FENETRES': ["Menuiseries Bois/PVC.", "Simple vitrage."]
         },
         'SOUS-SOLS': {
-            'CAVES': ["Caves sèches.", "Humidité importante / salpêtre."],
+            'CAVES': ["Caves sèches.", "Humidité / salpêtre."],
             'PARKING': ["Marquage sol conforme.", "Porte motorisée OK."]
         },
         'FLUIDES': {
-            'GAZ (RÉSEAU)': ["Bâtiment raccordé au réseau gaz.", "Compteurs en gaine technique."],
-            'COUPURE GAZ (OCG)': [
-                "OCG accessible et signalé.",
-                "Défaut : Clé de manœuvre absente du boîtier.",
-                "Défaut : Boîtier dégradé ou absent.",
-                "Défaut : Consignes de sécurité gaz non affichées."
-            ],
-            'EAU FROIDE': ["Compteurs en parties communes.", "Traces de corrosion."],
-            'VENTILATION': ["VMC Simple Flux.", "VMC Hygro B.", "Ventilation naturelle."]
+            'COUPURE GAZ (OCG)': ["OCG accessible.", "Clé de manœuvre absente.", "Consignes absentes."],
+            'VENTILATION': ["VMC Simple Flux.", "VMC Hygro B."]
         },
         'SECURITE': {
-            'INCENDIE': ["Extincteurs à jour.", "BAES fonctionnels.", "Trappe désenfumage OK."],
-            'AMIANTE / PLOMB': ["DTA fourni.", "CREP fourni.", "DTA non transmis."],
-            'CHAUFFERIE': ["Porte coupe-feu conforme.", "Livret de chaufferie à jour."]
+            'INCENDIE': ["Extincteurs OK.", "Trappe désenfumage OK."],
+            'AMIANTE / PLOMB': ["DTA fourni.", "CREP fourni."]
         }
     };
 
     let state = { name: "", fileNum: "", photos: [] };
     let currentSec = "";
 
-    function limitAndSave(el) {
+    function limit6(el) {
         if (el.value.length > 6) el.value = el.value.slice(0, 6);
         save();
     }
@@ -158,19 +148,22 @@
         }
     }
 
-    function loadExcel() {
-        const sub = document.getElementById('subPoste').value;
-        document.getElementById('commentBox').innerHTML = DB[currentSec][sub].map(c => 
-            `<div class="comment-item" onclick="document.getElementById('finalTxt').value='${c.replace(/'/g, "\\'")}'">${c}</div>`
-        ).join('');
+    // Fonction pour forcer le choix ou l'ouverture
+    function openMedia(type) {
+        if(type === 'camera') document.getElementById('inputCam').click();
+        else document.getElementById('inputLib').click();
     }
 
-    function onLoad(e) {
+    function onFile(e) {
         const file = e.target.files[0];
         if(!file) return;
         document.getElementById('editor').style.display = 'block';
+        document.getElementById('finalTxt').value = "Analyse en cours...";
         const reader = new FileReader();
-        reader.onload = (ev) => { window.lastB64 = ev.target.result; callAI(ev.target.result); };
+        reader.onload = (ev) => { 
+            window.lastB64 = ev.target.result; 
+            callAI(ev.target.result); 
+        };
         reader.readAsDataURL(file);
     }
 
@@ -209,6 +202,13 @@
         img.src = window.lastB64;
     }
 
+    function loadExcel() {
+        const sub = document.getElementById('subPoste').value;
+        document.getElementById('commentBox').innerHTML = DB[currentSec][sub].map(c => 
+            `<div class="comment-item" onclick="document.getElementById('finalTxt').value='${c.replace(/'/g, "\\'")}'">${c}</div>`
+        ).join('');
+    }
+
     function drawGallery() {
         document.getElementById('gal').innerHTML = state.photos.filter(p => p.sec === currentSec).map(p => `<img src="${p.b64}">`).join('');
     }
@@ -216,11 +216,11 @@
     function save() {
         state.name = document.getElementById('projName').value;
         state.fileNum = document.getElementById('fileNumber').value;
-        localStorage.setItem('dtg_pro_v7', JSON.stringify(state));
+        localStorage.setItem('dtg_v8', JSON.stringify(state));
     }
 
     function exportHTML() {
-        let h = `<html><body style="font-family:sans-serif;padding:30px;background:#f0f0f0;"><h1>Rapport Dossier ${state.fileNum} : ${state.name}</h1>`;
+        let h = `<html><body style="font-family:sans-serif;padding:30px;background:#f0f0f0;"><h1>Dossier ${state.fileNum} : ${state.name}</h1>`;
         state.photos.forEach(p => { h += `<div style="background:white;padding:20px;margin-bottom:20px;border-radius:10px;"><h3>${p.sec} > ${p.sub}</h3><img src="${p.b64}" style="width:100%;"><p>${p.txt}</p></div>`; });
         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([h + '</body></html>'], {type:'text/html'})); a.download = `RAPPORT_${state.fileNum}.html`; a.click();
     }
@@ -229,17 +229,13 @@
         const zip = new JSZip();
         state.photos.forEach((p, i) => zip.file(`${p.sec}/${p.sub}_${i}.png`, p.b64.split(',')[1], {base64: true}));
         zip.generateAsync({type:"blob"}).then(b => {
-            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `DIAG_DTG_${state.fileNum}.zip`; a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `DTG_${state.fileNum}.zip`; a.click();
         });
     }
 
     window.onload = () => {
-        const s = localStorage.getItem('dtg_pro_v7');
-        if(s) { 
-            state = JSON.parse(s); 
-            document.getElementById('projName').value = state.name || ""; 
-            document.getElementById('fileNumber').value = state.fileNum || ""; 
-        }
+        const s = localStorage.getItem('dtg_v8');
+        if(s) { state = JSON.parse(s); document.getElementById('projName').value = state.name; document.getElementById('fileNumber').value = state.fileNum; }
     };
 </script>
 </body>
