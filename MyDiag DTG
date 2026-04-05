@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyDiag DTG - Gratuit</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eceff1; margin: 0; padding: 15px; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        h1 { color: #1a237e; font-size: 1.4em; text-align: center; margin-bottom: 20px; }
+        label { font-weight: bold; color: #455a64; display: block; margin-bottom: 5px; }
+        select, textarea, button { width: 100%; padding: 14px; margin-top: 5px; border-radius: 8px; border: 1px solid #cfd8dc; font-size: 16px; box-sizing: border-box; }
+        button { background: #0288d1; color: white; border: none; font-weight: bold; transition: 0.3s; }
+        button:active { background: #01579b; transform: scale(0.98); }
+        #canvas { width: 100%; border-radius: 8px; margin-top: 15px; display: none; background: #000; }
+        .footer { text-align: center; font-size: 0.7em; color: #90a4ae; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>MyDiag DTG - Capture Terrain</h1>
+
+    <div class="card">
+        <label>1. Rubrique de l'ouvrage :</label>
+        <select id="rubrique">
+            <option>FONDATIONS</option>
+            <option>MURS & FAÇADES</option>
+            <option>PLANCHERS</option>
+            <option>COUVERTURE</option>
+            <option>CHARPENTE</option>
+            <option>BALCONS</option>
+            <option>FENÊTRES / PORTES</option>
+            <option>CAVES / PARKING</option>
+            <option>VENTILATION</option>
+            <option>SÉCURITÉ INCENDIE</option>
+            <option>ÉLECTRICITÉ / GAZ</option>
+        </select>
+    </div>
+
+    <div class="card">
+        <button onclick="document.getElementById('fileInput').click()">📸 PRENDRE LA PHOTO</button>
+        <input type="file" id="fileInput" accept="image/*" capture="camera" style="display:none" onchange="loadPhoto(event)">
+        
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div id="editZone" class="card" style="display:none;">
+        <label>2. Commentaire (utilisez le micro du clavier 🎙️) :</label>
+        <textarea id="legende" rows="3" placeholder="Tapez ou dictez votre observation ici..."></textarea>
+        
+        <button id="btnExport" style="background:#2e7d32; margin-top:15px;">💾 INCRUSTER & SAUVER (PNG)</button>
+    </div>
+
+    <div class="footer">Format optimisé pour copier-coller dans ADN Analysimmo</div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let imgObj = new Image();
+
+        function loadPhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imgObj.onload = () => {
+                    canvas.style.display = "block";
+                    document.getElementById('editZone').style.display = "block";
+                    renderCanvas();
+                };
+                imgObj.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderCanvas() {
+            const ratio = imgObj.width / imgObj.height;
+            canvas.width = 1200; 
+            canvas.height = 1200 / ratio;
+            ctx.drawImage(imgObj, 0, 0, canvas.width, canvas.height);
+        }
+
+        document.getElementById('btnExport').onclick = function() {
+            const txt = document.getElementById('legende').value;
+            const rub = document.getElementById('rubrique').value;
+            
+            renderCanvas(); // Refresh image
+
+            // Bandeau de légende
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.fillRect(0, canvas.height - 140, canvas.width, 140);
+
+            // Texte Rubrique
+            ctx.fillStyle = "#FFD600";
+            ctx.font = "bold 32px Arial";
+            ctx.fillText(rub, 40, canvas.height - 95);
+
+            // Texte Observation
+            ctx.fillStyle = "white";
+            ctx.font = "26px Arial";
+            wrapText(ctx, txt, 40, canvas.height - 55, canvas.width - 80, 35);
+
+            // Export PNG
+            const link = document.createElement('a');
+            link.download = `DTG_${rub}_${Date.now()}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        };
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            let words = text.split(' ');
+            let line = '';
+            for(let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + ' ';
+                if (context.measureText(testLine).width > maxWidth && n > 0) {
+                    context.fillText(line, x, y);
+                    line = words[n] + ' ';
+                    y += lineHeight;
+                } else { line = testLine; }
+            }
+            context.fillText(line, x, y);
+        }
+    </script>
+</body>
+</html>
