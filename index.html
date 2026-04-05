@@ -3,86 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyDiag DTG Pro</title>
+    <title>MyDiag DTG - ADN Analysimmo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { --p: #1a237e; --s: #0288d1; --a: #2e7d32; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; }
+        :root { --adn-blue: #1a237e; --adn-light: #0288d1; --adn-green: #2e7d32; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* Navigation par onglets */
-        .tabs { display: flex; overflow-x: auto; background: var(--p); color: white; sticky: top; z-index: 100; }
-        .tab { padding: 15px 20px; white-space: nowrap; cursor: pointer; border-bottom: 3px solid transparent; opacity: 0.7; }
-        .tab.active { opacity: 1; border-bottom: 3px solid #ffeb3b; font-weight: bold; }
+        /* Navigation par Chapitres Excel */
+        .tabs { display: flex; overflow-x: auto; background: var(--adn-blue); color: white; flex-shrink: 0; scrollbar-width: none; }
+        .tab { padding: 12px 15px; white-space: nowrap; cursor: pointer; border-bottom: 3px solid transparent; font-size: 0.8em; opacity: 0.7; }
+        .tab.active { opacity: 1; border-bottom: 3px solid #ffeb3b; background: rgba(255,255,255,0.1); font-weight: bold; }
 
-        /* Contenu */
-        .content { flex: 1; overflow-y: auto; padding: 15px; }
+        .container { flex: 1; overflow-y: auto; padding: 15px; }
         .view { display: none; }
         .view.active { display: block; }
 
-        /* Cartes et Formulaires */
-        .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        button { background: var(--s); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; margin: 5px 0; }
-        .btn-capture { background: #444; }
-        .btn-save { background: var(--a); }
+        .card { background: white; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        h2 { font-size: 1.1em; color: var(--adn-blue); margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        
+        /* Formulaire */
+        select, textarea, input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; }
+        .btn-photo { background: #455a64; color: white; }
+        .btn-save { background: var(--adn-green); color: white; }
 
-        /* Galerie de miniatures */
-        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 15px; }
-        .thumb { position: relative; width: 100%; aspect-ratio: 1; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; }
-        .thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .thumb-label { position: absolute; bottom: 0; background: rgba(0,0,0,0.6); color: white; font-size: 9px; width: 100%; padding: 2px; }
+        /* Commentaires Types du Excel */
+        .comment-bank { margin-top: 10px; max-height: 200px; overflow-y: auto; border: 1px dashed #ccc; padding: 5px; border-radius: 4px; }
+        .comment-item { font-size: 0.8em; background: #f0f7ff; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 3px solid var(--adn-light); cursor: pointer; }
+        .comment-item:active { background: #d0e7ff; }
 
+        /* Galerie */
+        .gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+        
         #canvas-buffer { display: none; }
-        .config-box { font-size: 12px; background: #eee; padding: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
 
 <div class="tabs" id="tabBar">
-    <div class="tab active" onclick="showTab('DASHBOARD')">🏠 PROJET</div>
-    <div class="tab" onclick="showTab('STRUCTURE')">🏗️ STRUCTURE</div>
-    <div class="tab" onclick="showTab('CLOS')">🏠 CLOS/COUVERT</div>
-    <div class="tab" onclick="showTab('TECHNIQUE')">⚙️ TECHNIQUE</div>
+    <div class="tab active" onclick="showTab('CONFIG')">⚙️ CONFIG</div>
+    <div class="tab" onclick="showTab('ENVELOPPE')">🏗️ ENVELOPPE</div>
+    <div class="tab" onclick="showTab('SOUS-SOLS')">🕳️ SOUS-SOLS</div>
+    <div class="tab" onclick="showTab('FLUIDES')">💧 FLUIDES</div>
     <div class="tab" onclick="showTab('SECURITE')">🛡️ SÉCURITÉ</div>
-    <div class="tab" onclick="showTab('EXPORT')" style="background: #e67e22;">📦 EXPORT</div>
+    <div class="tab" onclick="showTab('EXPORT')">📦 EXPORT</div>
 </div>
 
-<div class="content">
-    <div id="view-DASHBOARD" class="view active">
+<div class="container">
+    <div id="view-CONFIG" class="view active">
         <div class="card">
-            <label>Nom de la Copropriété :</label>
-            <input type="text" id="projName" placeholder="Ex: Résidence Les Fleurs" oninput="saveProj()">
+            <h2>Paramètres du Projet</h2>
+            <label>Nom de la copropriété :</label>
+            <input type="text" id="projName" placeholder="Ex: Résidence Belle Vue" oninput="saveGlobal()">
             <label>Clé API OpenAI :</label>
-            <input type="password" id="apiKey" value="AIzaSyALgB9zjGn0d7X7z5WeelO2vMEYTwwx-Fc" oninput="saveProj()">
-        </div>
-        <div class="config-box">
-            Données sauvegardées localement. Vous pouvez fermer le navigateur, rien ne sera perdu.
+            <input type="password" id="apiKey" placeholder="sk-..." oninput="saveGlobal()">
+            <p style="font-size: 0.7em; color: #666;">La clé est stockée uniquement dans votre téléphone.</p>
         </div>
     </div>
 
     <div id="view-POSTE" class="view">
-        <h2 id="currentPosteTitle">Rubrique</h2>
+        <h2 id="currentPosteLabel">Rubrique</h2>
         <div class="card">
-            <label>Poste spécifique :</label>
-            <select id="subPoste"></select>
-            <button class="btn-capture" onclick="triggerCamera()">📸 PRENDRE PHOTO</button>
-            <input type="file" id="fileInput" accept="image/*" capture="camera" style="display:none" onchange="handlePhoto(event)">
-        </div>
-        
-        <div id="analysisCard" class="card" style="display:none">
-            <textarea id="legendeIA" rows="3" placeholder="Analyse en cours..."></textarea>
-            <button class="btn-save" onclick="finalizePhoto()">VALIDER & INCRUSTER</button>
+            <label>Ouvrage (Nomenclature ADN) :</label>
+            <select id="subPoste" onchange="loadCommentBank()"></select>
+            
+            <button class="btn-photo" onclick="document.getElementById('fileInput').click()">📸 PRENDRE PHOTO</button>
+            <input type="file" id="fileInput" accept="image/*" capture="camera" style="display:none" onchange="processCapture(event)">
         </div>
 
-        <div class="gallery" id="currentGallery"></div>
+        <div id="editZone" class="card" style="display:none;">
+            <label>Légende (IA ou Sélection) :</label>
+            <textarea id="activeLabel" rows="3"></textarea>
+            
+            <div class="comment-bank" id="commentBank">
+                </div>
+            
+            <button class="btn-save" onclick="saveToGallery()">💾 VALIDER & INCRUSTER</button>
+        </div>
+
+        <div class="gallery" id="galleryContainer"></div>
     </div>
 
     <div id="view-EXPORT" class="view">
         <div class="card">
-            <h3>Finalisation du rapport</h3>
-            <p>Total photos : <span id="countPhotos">0</span></p>
-            <button onclick="downloadJSON()" style="background:#607d8b;">💾 EXPORTER JSON (SAUVEGARDE)</button>
-            <button onclick="downloadZIP()" style="background:#d32f2f;">📦 GÉNÉRER ZIP (PNG + NOMENCLATURE)</button>
-            <button onclick="clearAllData()" style="background:#f44336; margin-top:20px; font-size:10px;">EFFACER TOUT LE PROJET</button>
+            <h2>Exportation</h2>
+            <p>Photos enregistrées : <strong id="totalCount">0</strong></p>
+            <button onclick="exportZip()" style="background:#d32f2f; color:white;">📦 TÉLÉCHARGER ZIP (PNG)</button>
+            <button onclick="exportJson()" style="background:#546e7a; color:white;">💾 SAUVEGARDER PROJET (JSON)</button>
         </div>
     </div>
 </div>
@@ -90,163 +98,169 @@
 <canvas id="canvas-buffer"></canvas>
 
 <script>
-    // --- CONFIGURATION NOMENCLATURE ---
-    const NOMENCLATURE = {
-        'STRUCTURE': ['FONDATIONS', 'PLANCHERS', 'MURS ET FAÇADES', 'BALCONS'],
-        'CLOS': ['COUVERTURE', 'CHARPENTE', 'FENETRES', 'PORTES'],
-        'TECHNIQUE': ['VENTILATION', 'EAU FROIDE', 'EAUX USEES', 'CHAUFFAGE'],
-        'SECURITE': ['SECURITE INCENDIE', 'AMIANTE', 'PLOMB', 'ASCENSEURS']
+    // --- BASE DE DONNÉES EXTRAITE DE TON EXCEL ---
+    const DB_EXCEL = {
+        'ENVELOPPE': {
+            'FONDATIONS': ["FONDATIONS : OK. Pas de désordres symptomatiques.", "Fissures d’allure oblique en façade : présomption de tassement différentiel."],
+            'PLANCHERS': ["Dalle béton ou hourdis / entrevous.", "Poutrelles métalliques oxydées : prévoir brossage et traitement."],
+            'MURS, REFENDS ET FAÇADES': ["Pierre apparentes.", "Épaufrures de béton : défaut d’enrobage des aciers.", "Fissures structurelles à surveiller."],
+            'COUVERTURE': ["Tuiles mécanique à emboîtement.", "Toit-terrasse : étanchéité par membrane PVC.", "Défaut d'étanchéité ponctuel."],
+            'FENETRES ET OCCULTATIONS': ["Menuiseries extérieures en bon état.", "Peinture écaillée : vétusté de la protection."]
+        },
+        'SOUS-SOLS': {
+            'CAVES': ["Caves sèches et ventilées.", "Humidité importante / salpêtre observé.", "Cloisons bois à claire-voie."],
+            'PARKING EN SOUS-SOL': ["Marquage au sol visible.", "Marquage absent ou vétuste.", "Porte motorisée conforme."]
+        },
+        'FLUIDES': {
+            'VENTILATION': ["VMC Simple flux autoréglable.", "VMC Hygro B.", "Ventilation naturelle par conduits."],
+            'EAU FROIDE': ["Installation en bon état apparent.", "Traces de corrosion ou suintements ponctuels."],
+            'EAU CHAUDE SANITAIRE': ["Production collective via chaufferie.", "Installations individuelles."],
+            'CHAUFFAGE': ["Collectif gaz.", "Individuel électrique.", "Émetteurs radiateurs fonte/acier."]
+        },
+        'SECURITE': {
+            'SECURITE INCENDIE': ["Extincteurs OK et accessibles.", "BAES fonctionnels.", "Trappe de désenfumage conforme."],
+            'AMIANTE (SECURITE)': ["DTA à jour fourni.", "Aucun DTA transmis au jour de la visite.", "Immeuble non concerné (>1997)."],
+            'PLOMB (SECURITE)': ["Immeuble concerné et conforme (CREP fourni).", "Immeuble concerné et non conforme (CREP absent)."],
+            'ASCENSEURS': ["Contrôle périodique annuel à jour.", "Défaut de contrôle technique obligatoire."]
+        }
     };
 
-    let projectData = {
-        name: "",
-        apiKey: "AIzaSyALgB9zjGn0d7X7z5WeelO2vMEYTwwx-Fc",
-        photos: [] // {id, category, subCategory, label, base64}
-    };
+    let state = { name: "", apiKey: "", photos: [] };
+    let currentCat = "";
 
-    let activeCat = "";
-
-    // --- LOGIQUE DES ONGLETS ---
+    // --- NAVIGATION ---
     function showTab(cat) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        
-        if (NOMENCLATURE[cat]) {
-            activeCat = cat;
+        event.currentTarget.classList.add('active');
+
+        if (DB_EXCEL[cat]) {
+            currentCat = cat;
             document.getElementById('view-POSTE').classList.add('active');
-            document.getElementById('currentPosteTitle').innerText = cat;
+            document.getElementById('currentPosteLabel').innerText = cat;
             const sel = document.getElementById('subPoste');
-            sel.innerHTML = NOMENCLATURE[cat].map(p => `<option>${p}</option>`).join('');
+            sel.innerHTML = Object.keys(DB_EXCEL[cat]).map(k => `<option value="${k}">${k}</option>`).join('');
+            loadCommentBank();
             renderGallery();
         } else {
             document.getElementById('view-' + cat).classList.add('active');
         }
-        event.currentTarget.classList.add('active');
-        if(cat === 'EXPORT') updateExportCount();
+        if(cat === 'EXPORT') document.getElementById('totalCount').innerText = state.photos.length;
     }
 
-    // --- PERSISTENCE ---
-    function saveProj() {
-        projectData.name = document.getElementById('projName').value;
-        projectData.apiKey = document.getElementById('apiKey').value;
-        localStorage.setItem('diag_dtg_data', JSON.stringify(projectData));
+    function loadCommentBank() {
+        const sub = document.getElementById('subPoste').value;
+        const bank = document.getElementById('commentBank');
+        bank.innerHTML = DB_EXCEL[currentCat][sub].map(txt => 
+            `<div class="comment-item" onclick="setLabel('${txt.replace(/'/g, "\\'")}')">${txt}</div>`
+        ).join('');
     }
 
-    function loadProj() {
-        const saved = localStorage.getItem('diag_dtg_data');
-        if(saved) {
-            projectData = JSON.parse(saved);
-            document.getElementById('projName').value = projectData.name || "";
-            document.getElementById('apiKey').value = projectData.apiKey || "";
-        }
-    }
+    function setLabel(t) { document.getElementById('activeLabel').value = t; }
 
-    // --- GESTION PHOTOS ---
-    function triggerCamera() { document.getElementById('fileInput').click(); }
-
-    async function handlePhoto(e) {
+    // --- GESTION PHOTO ---
+    function processCapture(e) {
         const file = e.target.files[0];
         if(!file) return;
+        document.getElementById('editZone').style.display = 'block';
+        document.getElementById('activeLabel').value = "Analyse IA...";
 
-        document.getElementById('analysisCard').style.display = 'block';
-        document.getElementById('legendeIA').value = "Analyse IA en cours...";
-        
         const reader = new FileReader();
-        reader.onload = async (event) => {
-            const base64 = event.target.result;
-            // Appel IA
-            const response = await callIA(base64);
-            document.getElementById('legendeIA').value = response;
-            window.lastRawImg = base64;
+        reader.onload = (ev) => {
+            window.lastImg = ev.target.result;
+            callVisionAPI(ev.target.result);
         };
         reader.readAsDataURL(file);
     }
 
-    async function callIA(img) {
+    async function callVisionAPI(base64) {
+        if(!state.apiKey) { document.getElementById('activeLabel').value = ""; return; }
         try {
             const res = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${projectData.apiKey}` },
+                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${state.apiKey}`},
                 body: JSON.stringify({
                     model: "gpt-4o",
-                    messages: [{ role: "user", content: [
-                        { type: "text", text: "Expert DTG: décris cette photo pour ADN Analysimmo (max 150 car.)" },
-                        { type: "image_url", image_url: { url: img } }
+                    messages: [{role: "user", content: [
+                        {type: "text", text: "Expert DTG. Fais une légende technique courte pour cette photo (max 150 car)."},
+                        {type: "image_url", image_url: {url: base64}}
                     ]}]
                 })
             });
-            const data = await res.json();
-            return data.choices[0].message.content;
-        } catch(e) { return "Observation terrain..."; }
+            const d = await res.json();
+            document.getElementById('activeLabel').value = d.choices[0].message.content;
+        } catch(e) { document.getElementById('activeLabel').value = "Saisie manuelle..."; }
     }
 
-    function finalizePhoto() {
+    function saveToGallery() {
         const canvas = document.getElementById('canvas-buffer');
         const ctx = canvas.getContext('2d');
         const img = new Image();
         img.onload = () => {
-            canvas.width = 1000; canvas.height = 800;
-            ctx.drawImage(img, 0, 0, 1000, 800);
+            canvas.width = 1200; canvas.height = 900;
+            ctx.drawImage(img, 0, 0, 1200, 900);
             
-            // Incrustation
-            ctx.fillStyle = "rgba(0,0,0,0.7)";
-            ctx.fillRect(0, 700, 1000, 100);
-            ctx.fillStyle = "white"; ctx.font = "20px Arial";
-            ctx.fillText(document.getElementById('legendeIA').value, 20, 760);
+            // Bandeau de légende
+            ctx.fillStyle = "rgba(0,0,0,0.8)";
+            ctx.fillRect(0, 780, 1200, 120);
+            ctx.fillStyle = "white";
+            ctx.font = "bold 28px Arial";
+            ctx.fillText(document.getElementById('subPoste').value, 30, 825);
+            ctx.font = "24px Arial";
+            ctx.fillText(document.getElementById('activeLabel').value, 30, 865);
 
-            const finalBase64 = canvas.toDataURL("image/png");
-            projectData.photos.push({
-                id: Date.now(),
-                category: activeCat,
-                subCategory: document.getElementById('subPoste').value,
-                label: document.getElementById('legendeIA').value,
-                data: finalBase64
+            state.photos.push({
+                cat: currentCat,
+                sub: document.getElementById('subPoste').value,
+                data: canvas.toDataURL("image/png")
             });
-            saveProj();
+            saveGlobal();
             renderGallery();
-            document.getElementById('analysisCard').style.display = 'none';
+            document.getElementById('editZone').style.display = 'none';
         };
-        img.src = window.lastRawImg;
+        img.src = window.lastImg;
     }
 
     function renderGallery() {
-        const container = document.getElementById('currentGallery');
-        const filtered = projectData.photos.filter(p => p.category === activeCat);
-        container.innerHTML = filtered.map(p => `
-            <div class="thumb">
-                <img src="${p.data}">
-                <div class="thumb-label">${p.subCategory}</div>
-            </div>
-        `).join('');
+        const cont = document.getElementById('galleryContainer');
+        cont.innerHTML = state.photos.filter(p => p.cat === currentCat).map(p => `<img src="${p.data}" class="thumb">`).join('');
     }
 
-    // --- EXPORTS ---
-    function updateExportCount() { document.getElementById('countPhotos').innerText = projectData.photos.length; }
-
-    function downloadJSON() {
-        const blob = new Blob([JSON.stringify(projectData)], {type: "application/json"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `SAUVEGARDE_DTG_${projectData.name}.json`;
-        a.click();
+    // --- STORAGE & EXPORT ---
+    function saveGlobal() {
+        state.name = document.getElementById('projName').value;
+        state.apiKey = document.getElementById('apiKey').value;
+        localStorage.setItem('mydiag_dtg_adn', JSON.stringify(state));
     }
 
-    async function downloadZIP() {
+    async function exportZip() {
         const zip = new JSZip();
-        projectData.photos.forEach((p, index) => {
-            const imgData = p.data.split(',')[1];
-            zip.file(`${p.category}/${p.subCategory}_${index}.png`, imgData, {base64: true});
+        state.photos.forEach((p, i) => {
+            zip.file(`${p.cat}/${p.sub}_${i}.png`, p.data.split(',')[1], {base64: true});
         });
-        const content = await zip.generateAsync({type:"blob"});
+        const blob = await zip.generateAsync({type:"blob"});
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(content);
-        a.download = `PHOTOS_DTG_${projectData.name}.zip`;
+        a.href = URL.createObjectURL(blob);
+        a.download = `DTG_${state.name || 'Projet'}.zip`;
         a.click();
     }
 
-    function clearAllData() { if(confirm("Effacer tout ?")) { localStorage.clear(); location.reload(); } }
+    function exportJson() {
+        const blob = new Blob([JSON.stringify(state)], {type: "application/json"});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `SAUVEGARDE_DTG_${state.name}.json`;
+        a.click();
+    }
 
-    window.onload = loadProj;
+    window.onload = () => {
+        const s = localStorage.getItem('mydiag_dtg_adn');
+        if(s) {
+            state = JSON.parse(s);
+            document.getElementById('projName').value = state.name || "";
+            document.getElementById('apiKey').value = state.apiKey || "";
+        }
+    };
 </script>
 </body>
 </html>
