@@ -3,101 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyDiag DTG - ADN Analysimmo</title>
+    <title>MyDiag DTG - Expert ADN</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { --adn-blue: #101844; --adn-gold: #c5a059; --bg: #f8f9fa; --card-bg: #ffffff; }
-        body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; color: #333; }
+        :root { --adn-blue: #101844; --adn-gold: #c5a059; --bg: #f4f6f9; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; color: #333; }
         
-        /* Navigation Pro */
-        .tabs { display: flex; overflow-x: auto; background: var(--adn-blue); flex-shrink: 0; scrollbar-width: none; border-bottom: 2px solid var(--adn-gold); }
-        .tab { padding: 15px 20px; white-space: nowrap; cursor: pointer; color: white; opacity: 0.6; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; transition: 0.3s; }
-        .tab.active { opacity: 1; background: rgba(255,255,255,0.1); border-bottom: 4px solid var(--adn-gold); }
+        /* Navigation & Tabs */
+        .tabs { display: flex; overflow-x: auto; background: var(--adn-blue); scrollbar-width: none; border-bottom: 3px solid var(--adn-gold); flex-shrink: 0; }
+        .tab { padding: 15px 20px; white-space: nowrap; cursor: pointer; color: white; opacity: 0.6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+        .tab.active { opacity: 1; background: rgba(255,255,255,0.1); }
 
         .container { flex: 1; overflow-y: auto; padding: 20px; }
         .view { display: none; }
         .view.active { display: block; }
 
-        /* Styles Accueil (PROJET) */
-        .hero-card { background: linear-gradient(135deg, var(--adn-blue) 0%, #1e2a5a 100%); color: white; padding: 30px 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .hero-card h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; }
-        .hero-card p { font-size: 0.9rem; opacity: 0.8; margin-top: 10px; }
+        /* Accueil Retouchée */
+        .welcome-card { background: white; border-radius: 15px; padding: 40px 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e1e4e8; }
+        .logo-placeholder { font-size: 3rem; margin-bottom: 10px; }
+        .welcome-card h1 { margin: 0; color: var(--adn-blue); font-size: 1.6rem; }
         
-        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #eee; }
-        h2 { font-size: 1.1rem; color: var(--adn-blue); margin-bottom: 15px; border-left: 4px solid var(--adn-gold); padding-left: 10px; }
+        .input-group { text-align: left; margin-top: 25px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color: #555; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+        
+        .btn-config { background: none; border: 1px solid #ddd; color: #888; font-size: 0.8rem; margin-top: 20px; width: auto; padding: 5px 15px; }
 
-        input, select, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
-        .btn-main { background: var(--adn-blue); color: white; }
-        .btn-photo { background: #444; color: white; }
+        /* Saisie */
+        .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 15px; border: 1px solid #eee; }
+        .btn-action { background: var(--adn-blue); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; margin: 10px 0; }
         .btn-save { background: #27ae60; color: white; }
 
-        /* Grille de commentaires Excel */
-        .excel-comments { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 15px; }
-        .comment-tag { background: #f0f4f8; padding: 12px; border-radius: 8px; font-size: 0.85rem; border: 1px solid #d1d9e6; cursor: pointer; line-height: 1.4; color: #444; }
-        .comment-tag:active { background: #e2e8f0; border-color: var(--adn-gold); }
+        /* Commentaires de l'Excel */
+        .comment-list { display: grid; gap: 8px; margin-top: 15px; }
+        .comment-item { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
+        .comment-item:active { background: #e2e8f0; border-color: var(--adn-gold); }
 
-        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 20px; }
-        .gallery img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
-
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 20px; }
+        .gallery img { width: 100%; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
+        
         #canvas-hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="tabs" id="tabBar">
+<div class="tabs">
     <div class="tab active" onclick="showTab('DASHBOARD')">Projet</div>
     <div class="tab" onclick="showTab('ENVELOPPE')">Enveloppe</div>
     <div class="tab" onclick="showTab('SOUS-SOLS')">Sous-sols</div>
-    <div class="tab" onclick="showTab('RÉSEAUX')">Réseaux / Gaz</div>
-    <div class="tab" onclick="showTab('SÉCURITÉ')">Sécurité</div>
+    <div class="tab" onclick="showTab('FLUIDES')">Réseaux / Gaz</div>
+    <div class="tab" onclick="showTab('SECURITE')">Sécurité</div>
     <div class="tab" onclick="showTab('EXPORT')">Export</div>
 </div>
 
 <div class="container">
     <div id="view-DASHBOARD" class="view active">
-        <div class="hero-card">
+        <div class="welcome-card">
+            <div class="logo-placeholder">🏢</div>
             <h1>MyDiag DTG</h1>
-            <p>Assistant de saisie terrain ADN Analysimmo</p>
-        </div>
-        
-        <div class="card">
-            <h2>Identification Mission</h2>
-            <input type="text" id="projName" placeholder="Nom de la copropriété / N° de dossier" oninput="persist()">
+            <p>Saisie terrain simplifiée</p>
             
-            <h2 style="margin-top:25px;">Connecteurs</h2>
-            <input type="password" id="apiKey" placeholder="Configuration API (Masquée)" oninput="persist()">
-            <p style="font-size: 0.75rem; color: #888; margin-top: -5px;">Indispensable pour l'analyse visuelle des pathologies.</p>
-        </div>
-
-        <div class="card" style="text-align: center; border: 1px dashed var(--adn-gold);">
-            <p style="font-size: 0.85rem; margin: 0;">Prêt pour la visite. <br>Naviguez dans les onglets pour débuter les photos.</p>
+            <div class="input-group">
+                <label>Nom de la Copropriété :</label>
+                <input type="text" id="projName" placeholder="Ex: Résidence Analysimmo" oninput="save()">
+            </div>
+            
+            <button class="btn-config" onclick="toggleApi()">⚙️ Paramètres API</button>
+            <div id="apiBox" style="display:none; margin-top:10px;">
+                <input type="password" id="apiKey" placeholder="Clé API OpenAI" oninput="save()">
+            </div>
         </div>
     </div>
 
     <div id="view-SECTION" class="view">
-        <h2 id="sectionTitle">Rubrique</h2>
+        <h2 id="secTitle" style="color:var(--adn-blue)">Rubrique</h2>
         <div class="card">
-            <select id="subPoste" onchange="loadExcelList()"></select>
-            <button class="btn-photo" onclick="document.getElementById('camIn').click()">📸 PRENDRE PHOTO</button>
-            <input type="file" id="camIn" accept="image/*" capture="camera" style="display:none" onchange="onImgLoad(event)">
+            <label>Sous-poste :</label>
+            <select id="subPoste" onchange="loadExcel()"></select>
+            <button class="btn-action" onclick="document.getElementById('camIn').click()">📸 PRENDRE PHOTO</button>
+            <input type="file" id="camIn" accept="image/*" capture="camera" style="display:none" onchange="onLoad(event)">
         </div>
 
         <div id="editor" class="card" style="display:none; border: 2px solid var(--adn-gold);">
-            <textarea id="finalTxt" rows="4" placeholder="Commentaire..."></textarea>
-            <div id="excelList" class="excel-comments"></div>
-            <button class="btn-save" onclick="burnAndSave()">💾 SAUVEGARDER PNG</button>
+            <textarea id="finalTxt" rows="3"></textarea>
+            <div id="commentBox" class="comment-list"></div>
+            <button class="btn-action btn-save" onclick="savePhoto()">💾 VALIDER & SAUVER</button>
         </div>
 
-        <div class="gallery" id="secGal"></div>
+        <div class="gallery" id="gal"></div>
     </div>
 
     <div id="view-EXPORT" class="view">
         <div class="card">
-            <h2>Génération des fichiers</h2>
-            <p>Photos dans l'album : <strong id="pStat">0</strong></p>
-            <button onclick="exportHTML()" style="background:var(--adn-blue); color:white; margin-bottom:12px;">📄 RAPPORT HTML (Ouverture PC)</button>
-            <button onclick="exportZIP()" style="background:var(--adn-gold); color:white;">📦 ARCHIVE ZIP (PNG Triés)</button>
+            <h2>Exportation PC</h2>
+            <p>Total photos : <strong id="count">0</strong></p>
+            <button class="btn-action" onclick="exportHTML()" style="background:#444">📄 EXPORT VISIONNEUSE HTML</button>
+            <button class="btn-action" onclick="exportZIP()" style="background:var(--adn-gold)">📦 EXPORT ZIP (PNG)</button>
         </div>
     </div>
 </div>
@@ -105,93 +106,87 @@
 <canvas id="canvas-hidden"></canvas>
 
 <script>
-    // --- DATABASE INTEGRATION (GAZ & OCG INCLUS) ---
-    const NOMENCLATURE = {
+    // --- DATA COMPLETE ---
+    const DB = {
         'ENVELOPPE': {
-            'FONDATIONS': ["FONDATIONS : OK. Pas de désordres symptomatiques.", "Fissures d’allure oblique en façade : présomption de tassement."],
-            'MURS ET FAÇADES': ["Pierre apparentes.", "Épaufrures de béton : défaut d’enrobage.", "Micro-fissurage superficiel."],
-            'COUVERTURE': ["Tuiles mécanique à emboîtement.", "Toit-terrasse PVC avec graviers.", "Infiltrations localisées observées."],
-            'BALCONS': ["Garde-corps conformes (H > 1m).", "Épaufrures en nez de dalle.", "Oxydation des fers."],
-            'FENÊTRES': ["Menuiseries en bon état.", "Simple vitrage : prévoir remplacement pour confort thermique."]
+            'FONDATIONS': ["FONDATIONS : OK. Pas de désordres symptomatiques.", "Fissures obliques en façade : présomption de tassement."],
+            'MURS ET FAÇADES': ["Pierre apparentes.", "Béton banché.", "Épaufrures de béton.", "Défaut d'enrobage des aciers."],
+            'COUVERTURE': ["Tuiles mécanique.", "Toit-terrasse PVC.", "Chéneaux encombrés."],
+            'BALCONS': ["Garde-corps conformes.", "Oxydation des fers en sous-face."],
+            'FENETRES': ["Menuiseries Bois/PVC.", "Simple vitrage : prévoir remplacement."]
         },
         'SOUS-SOLS': {
-            'CAVES': ["Caves sèches.", "Humidité importante et salpêtre.", "Cloisonnement bois claire-voie."],
-            'PARKING': ["Marquage sol conforme.", "Porte motorisée fonctionnelle."]
+            'CAVES': ["Caves sèches.", "Humidité importante / salpêtre."],
+            'PARKING': ["Marquage sol conforme.", "Marquage vétuste.", "Porte motorisée OK."]
         },
-        'RÉSEAUX': {
-            'GAZ (RÉSEAU)': ["Bâtiment raccordé au réseau gaz.", "Compteurs gaz accessibles en parties communes."],
+        'FLUIDES': {
+            'GAZ (RÉSEAU)': ["Bâtiment raccordé au réseau gaz.", "Compteurs en gaine technique."],
             'COUPURE GAZ (OCG)': [
-                "L’organe de coupure générale (OCG) est accessible et signalé.",
-                "OCG localisé : boîtier de protection et clé de manœuvre présents.",
-                "Défaut : Clé de manœuvre absente du boîtier.",
+                "Organe de Coupure Générale (OCG) identifié, accessible et signalé.",
+                "Défaut : Clé de manœuvre absente du boîtier de coupure.",
+                "Défaut : Boîtier de protection dégradé ou absent.",
                 "Défaut : Consignes de sécurité gaz non affichées.",
-                "Défaut : OCG non signalé ou inaccessible."
+                "OCG non signalé ou inaccessible."
             ],
-            'EAU FROIDE': ["Compteurs individuels identifiés.", "Traces de corrosion sur colonnes montantes."],
+            'EAU FROIDE': ["Compteurs en parties communes.", "Traces de corrosion sur colonnes."],
             'VENTILATION': ["VMC Simple Flux.", "VMC Hygro B.", "Ventilation naturelle."]
         },
-        'SÉCURITÉ': {
-            'INCENDIE': ["Extincteurs à jour.", "BAES fonctionnels.", "Trappe de désenfumage OK."],
-            'AMIANTE / PLOMB': ["DTA fourni et à jour.", "CREP fourni.", "DTA non transmis.", "CREP absent."],
-            'CHAUFFERIE': ["Porte coupe-feu conforme.", "Livret de chaufferie présent et à jour."]
+        'SECURITE': {
+            'INCENDIE': ["Extincteurs à jour.", "BAES fonctionnels.", "Trappe désenfumage OK."],
+            'AMIANTE / PLOMB': ["DTA fourni.", "CREP fourni.", "DTA non transmis.", "CREP absent."],
+            'CHAUFFERIE': ["Porte coupe-feu conforme.", "Livret de chaufferie à jour."]
         }
     };
 
-    let appState = { name: "", key: "", items: [] };
-    let activeSec = "";
+    let state = { name: "", key: "", photos: [] };
+    let currentSec = "";
 
     function showTab(cat) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         event.currentTarget.classList.add('active');
 
-        if (NOMENCLATURE[cat]) {
-            activeSec = cat;
+        if (DB[cat]) {
+            currentSec = cat;
             document.getElementById('view-SECTION').classList.add('active');
-            document.getElementById('sectionTitle').innerText = cat;
-            const sel = document.getElementById('subPoste');
-            sel.innerHTML = Object.keys(NOMENCLATURE[cat]).map(k => `<option value="${k}">${k}</option>`).join('');
-            loadExcelList();
+            document.getElementById('secTitle').innerText = cat;
+            document.getElementById('subPoste').innerHTML = Object.keys(DB[cat]).map(k => `<option value="${k}">${k}</option>`).join('');
+            loadExcel();
             drawGallery();
         } else {
             document.getElementById('view-' + cat).classList.add('active');
         }
-        if(cat === 'EXPORT') document.getElementById('pStat').innerText = appState.items.length;
+        if(cat === 'EXPORT') document.getElementById('count').innerText = state.photos.length;
     }
 
-    function loadExcelList() {
+    function loadExcel() {
         const sub = document.getElementById('subPoste').value;
-        const list = document.getElementById('excelList');
-        list.innerHTML = NOMENCLATURE[activeSec][sub].map(c => 
-            `<div class="comment-tag" onclick="inject('${c.replace(/'/g, "\\"')}')">${c}</div>`
+        document.getElementById('commentBox').innerHTML = DB[currentSec][sub].map(c => 
+            `<div class="comment-item" onclick="document.getElementById('finalTxt').value='${c.replace(/'/g, "\\'")}'">${c}</div>`
         ).join('');
     }
 
-    function inject(t) { document.getElementById('finalTxt').value = t; }
+    function toggleApi() { const b = document.getElementById('apiBox'); b.style.display = b.style.display==='none'?'block':'none'; }
 
-    function onImgLoad(e) {
+    function onLoad(e) {
         const file = e.target.files[0];
         if(!file) return;
         document.getElementById('editor').style.display = 'block';
-        document.getElementById('finalTxt').value = "Analyse visuelle...";
         const reader = new FileReader();
-        reader.onload = (ev) => {
-            window.tempB64 = ev.target.result;
-            aiVision(ev.target.result);
-        };
+        reader.onload = (ev) => { window.lastB64 = ev.target.result; callAI(ev.target.result); };
         reader.readAsDataURL(file);
     }
 
-    async function aiVision(b64) {
-        if(!appState.key) { document.getElementById('finalTxt').value = ""; return; }
+    async function callAI(b64) {
+        if(!state.key) { document.getElementById('finalTxt').value = ""; return; }
         try {
             const res = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${appState.key}`},
+                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${state.key}`},
                 body: JSON.stringify({
                     model: "gpt-4o",
                     messages: [{role: "user", content: [
-                        {type: "text", text: "Expert bâtiment: fais une légende technique courte (150 car) pour ce DTG."},
+                        {type: "text", text: "Expert DTG. Légende courte (150 car) pour cette photo."},
                         {type: "image_url", image_url: {url: b64}}
                     ]}]
                 })
@@ -201,67 +196,54 @@
         } catch(e) { document.getElementById('finalTxt').value = ""; }
     }
 
-    function burnAndSave() {
+    function savePhoto() {
         const cvs = document.getElementById('canvas-hidden');
         const ctx = cvs.getContext('2d');
         const img = new Image();
         img.onload = () => {
             cvs.width = 1000; cvs.height = 750;
             ctx.drawImage(img, 0, 0, 1000, 750);
-            ctx.fillStyle = "rgba(0,0,0,0.85)"; ctx.fillRect(0, 650, 1000, 100);
+            ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0, 650, 1000, 100);
             ctx.fillStyle = "#c5a059"; ctx.font = "bold 22px Arial";
             ctx.fillText(document.getElementById('subPoste').value, 25, 685);
             ctx.fillStyle = "white"; ctx.font = "19px Arial";
             ctx.fillText(document.getElementById('finalTxt').value, 25, 725);
 
-            appState.items.push({
-                sec: activeSec,
-                sub: document.getElementById('subPoste').value,
-                txt: document.getElementById('finalTxt').value,
-                b64: cvs.toDataURL("image/png")
-            });
-            persist();
-            drawGallery();
-            document.getElementById('editor').style.display = 'none';
+            state.photos.push({ sec: currentSec, sub: document.getElementById('subPoste').value, txt: document.getElementById('finalTxt').value, b64: cvs.toDataURL("image/png") });
+            save(); drawGallery(); document.getElementById('editor').style.display = 'none';
         };
-        img.src = window.tempB64;
+        img.src = window.lastB64;
     }
 
     function drawGallery() {
-        const g = document.getElementById('secGal');
-        g.innerHTML = appState.items.filter(p => p.sec === activeSec).map(p => `<img src="${p.b64}">`).join('');
+        document.getElementById('gal').innerHTML = state.photos.filter(p => p.sec === currentSec).map(p => `<img src="${p.b64}">`).join('');
     }
 
-    function persist() {
-        appState.name = document.getElementById('projName').value;
-        appState.key = document.getElementById('apiKey').value;
-        localStorage.setItem('diag_dtg_adn_v4', JSON.stringify(appState));
+    function save() {
+        state.name = document.getElementById('projName').value;
+        state.key = document.getElementById('apiKey').value;
+        localStorage.setItem('dtg_pro_final', JSON.stringify(state));
     }
 
     function exportHTML() {
-        let h = `<html><body style="font-family:sans-serif;padding:30px;background:#f0f0f0;"><h1>Rapport de visite : ${appState.name}</h1>`;
-        appState.items.forEach(p => {
-            h += `<div style="background:white;padding:15px;margin-bottom:20px;border-radius:10px;"><h3>${p.sec} > ${p.sub}</h3><img src="${p.b64}" style="max-width:100%;"><p>${p.txt}</p></div>`;
+        let h = `<html><body style="font-family:sans-serif;padding:30px;background:#f0f0f0;"><h1>Rapport ${state.name}</h1>`;
+        state.photos.forEach(p => {
+            h += `<div style="background:white;padding:20px;margin-bottom:20px;border-radius:10px;"><h3>${p.sec} > ${p.sub}</h3><img src="${p.b64}" style="width:100%;"><p>${p.txt}</p></div>`;
         });
         h += `</body></html>`;
-        const b = new Blob([h], {type:'text/html'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `DTG_${appState.name}.html`; a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([h], {type:'text/html'})); a.download = `VISIONNEUSE_${state.name}.html`; a.click();
     }
 
     async function exportZIP() {
         const zip = new JSZip();
-        appState.items.forEach((p, i) => zip.file(`${p.sec}/${p.sub}_${i}.png`, p.b64.split(',')[1], {base64: true}));
-        const content = await zip.generateAsync({type:"blob"});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(content); a.download = `DIAG_PHOTOS_${appState.name}.zip`; a.click();
+        state.photos.forEach((p, i) => zip.file(`${p.sec}/${p.sub}_${i}.png`, p.b64.split(',')[1], {base64: true}));
+        const b = await zip.generateAsync({type:"blob"});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `DIAG_PHOTOS_${state.name}.zip`; a.click();
     }
 
     window.onload = () => {
-        const s = localStorage.getItem('diag_dtg_adn_v4');
-        if(s) {
-            appState = JSON.parse(s);
-            document.getElementById('projName').value = appState.name || "";
-            document.getElementById('apiKey').value = appState.key || "";
-        }
+        const s = localStorage.getItem('dtg_pro_final');
+        if(s) { state = JSON.parse(s); document.getElementById('projName').value = state.name; document.getElementById('apiKey').value = state.key; }
     };
 </script>
 </body>
