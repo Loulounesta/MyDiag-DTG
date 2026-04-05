@@ -28,7 +28,7 @@
         .view { display: none; }
         .view.active { display: block; }
 
-        /* NOUVEAU DESIGN ACCUEIL (DASHBOARD) */
+        /* Accueil */
         .welcome-card { background: linear-gradient(135deg, var(--adn-blue) 0%, #1e2a5a 100%); color: white; border-radius: 12px; padding: 25px 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .welcome-card h1 { margin: 0; font-size: 1.8rem; letter-spacing: 1px; }
         .welcome-card p { margin: 5px 0 0 0; font-size: 0.9rem; opacity: 0.8; }
@@ -42,13 +42,11 @@
         input:focus, textarea:focus { outline: none; border-color: var(--adn-gold); background: #fff; }
         input#fileNumber { font-weight: bold; letter-spacing: 2px; color: var(--adn-blue); font-size: 1.2rem; }
 
-        /* Grille Statistiques Accueil */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .stat-box { background: #f8fafc; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; }
         .stat-box span { display: block; font-size: 2rem; font-weight: bold; color: var(--adn-gold); }
         .stat-box label { font-size: 0.75rem; color: var(--adn-blue); font-weight: bold; text-transform: uppercase; margin-top: 5px; display: block; }
 
-        /* Boutons */
         .btn-action { background: var(--adn-blue); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; margin: 8px 0; font-size: 0.9rem; cursor: pointer; transition: 0.2s; }
         .btn-action:active { transform: scale(0.98); }
         .btn-lib { background: #546e7a; }
@@ -63,7 +61,6 @@
         .comment-item { background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 0.85rem; cursor: pointer; margin-bottom: 5px; line-height: 1.4; }
         .comment-item:active { background: #e2e8f0; border-color: var(--adn-gold); }
 
-        /* MODAL PLEIN ECRAN (EDITION & SUPPRESSION) */
         .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;}
         .modal-content { max-width: 100%; max-height: 50vh; border: 2px solid var(--adn-gold); border-radius: 8px; object-fit: contain; }
         .modal-close { position: absolute; top: 15px; right: 20px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; }
@@ -72,9 +69,34 @@
         .modal-btn { flex: 1; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; cursor: pointer; color: white; }
         .btn-update { background: #2980b9; }
         .btn-delete { background: #c0392b; }
+
+        /* VOYANT DE SAUVEGARDE */
+        #saveIndicator {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(39, 174, 96, 0.95);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #saveIndicator.show { opacity: 1; }
     </style>
 </head>
 <body>
+
+<div id="saveIndicator">✅ Sauvegardé</div>
 
 <div id="photoModal" class="modal" onclick="if(event.target.id === 'photoModal') closeModal()">
     <span class="modal-close" onclick="closeModal()">&times;</span>
@@ -236,6 +258,7 @@
     let state = { name: "", fileNum: "", address: "", inspector: "", photos: [] };
     let currentSec = "";
     let currentModalIndex = -1; 
+    let saveTimeout; // Pour le voyant de sauvegarde
 
     function limit6(el) {
         if (el.value.length > 6) el.value = el.value.slice(0, 6);
@@ -283,7 +306,6 @@
         document.getElementById('finalTxt').value = "";
         
         const reader = new FileReader();
-        // On conserve l'image BRUTE sans incrustation
         reader.onload = (ev) => { window.lastB64 = ev.target.result; };
         reader.readAsDataURL(file);
     }
@@ -332,7 +354,7 @@
         document.getElementById('gal').innerHTML = html;
     }
 
-    // --- FONCTIONS VISIONNEUSE (EDITION ET SUPPRESSION) ---
+    // --- FONCTIONS VISIONNEUSE ---
     function openModal(index) {
         currentModalIndex = index;
         document.getElementById('modalImg').src = state.photos[index].b64;
@@ -354,12 +376,8 @@
 
     function updateCurrentPhoto() {
         if(currentModalIndex === -1) return;
-        
         let p = state.photos[currentModalIndex];
-        if(!p.raw) {
-            alert("Impossible de modifier le texte de cette photo (image originale introuvable).");
-            return;
-        }
+        if(!p.raw) return;
 
         let newTxt = document.getElementById('modalEditTxt').value;
         const cvs = document.getElementById('canvas-hidden');
@@ -369,7 +387,6 @@
         img.onload = () => {
             cvs.width = 1000; cvs.height = 750;
             ctx.drawImage(img, 0, 0, 1000, 750);
-            
             ctx.fillStyle = "rgba(0,0,0,0.85)"; 
             ctx.fillRect(0, 650, 1000, 100);
             ctx.fillStyle = "#c5a059"; 
@@ -386,7 +403,6 @@
             drawGallery(); 
             
             document.getElementById('modalImg').src = p.b64;
-            
             let btn = document.querySelector('.btn-update');
             let originalText = btn.innerHTML;
             btn.innerHTML = "✔️ MIS À JOUR !";
@@ -395,7 +411,16 @@
         };
         img.src = p.raw; 
     }
-    // ----------------------------
+
+    // --- FONCTION DE SAUVEGARDE ET VOYANT ---
+    function triggerSaveToast() {
+        const toast = document.getElementById('saveIndicator');
+        toast.classList.add('show');
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 1500); // Disparaît après 1,5 sec
+    }
 
     function save() {
         state.name = document.getElementById('projName').value;
@@ -404,8 +429,10 @@
         state.inspector = document.getElementById('inspectorName').value;
         localStorage.setItem('dtg_pro_no_ai', JSON.stringify(state));
         updateDashStats();
+        triggerSaveToast(); // Affiche le voyant
     }
 
+    // --- EXPORTS ---
     function exportHTML() {
         const d = new Date().toLocaleDateString('fr-FR');
         let h = `<html><body style="font-family:sans-serif;padding:30px;background:#f0f0f0;">
@@ -432,9 +459,7 @@
     function resetApp() { if(confirm("Attention, cela supprimera toutes les photos et les infos du dossier en cours. Continuer ?")) { localStorage.clear(); location.reload(); } }
 
     window.onload = () => {
-        // Affichage de la date du jour
         document.getElementById('dashDate').innerText = new Date().toLocaleDateString('fr-FR');
-        
         const s = localStorage.getItem('dtg_pro_no_ai');
         if(s) { 
             state = JSON.parse(s); 
