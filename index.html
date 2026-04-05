@@ -3,93 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyDiag DTG Pro - Expert ADN</title>
+    <title>MyDiag DTG - ADN Analysimmo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { --adn-blue: #101844; --adn-gold: #c5a059; --bg: #f5f7fa; --text: #333; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; color: var(--text); }
+        :root { --adn-blue: #101844; --adn-gold: #c5a059; --bg: #f8f9fa; --card-bg: #ffffff; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; color: #333; }
         
-        /* Navigation Onglets Excel */
-        .tabs { display: flex; overflow-x: auto; background: var(--adn-blue); color: white; flex-shrink: 0; scrollbar-width: none; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .tab { padding: 14px 20px; white-space: nowrap; cursor: pointer; border-bottom: 4px solid transparent; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
-        .tab.active { opacity: 1; border-bottom: 4px solid var(--adn-gold); background: rgba(255,255,255,0.05); font-weight: bold; }
+        /* Navigation Pro */
+        .tabs { display: flex; overflow-x: auto; background: var(--adn-blue); flex-shrink: 0; scrollbar-width: none; border-bottom: 2px solid var(--adn-gold); }
+        .tab { padding: 15px 20px; white-space: nowrap; cursor: pointer; color: white; opacity: 0.6; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; transition: 0.3s; }
+        .tab.active { opacity: 1; background: rgba(255,255,255,0.1); border-bottom: 4px solid var(--adn-gold); }
 
-        .container { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
+        .container { flex: 1; overflow-y: auto; padding: 20px; }
         .view { display: none; }
         .view.active { display: block; }
 
-        .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e1e4e8; }
-        h2 { font-size: 1.2em; color: var(--adn-blue); margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-
-        select, textarea, input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ced4da; border-radius: 8px; font-size: 15px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-capture { background: #2c3e50; color: white; }
-        .btn-save { background: #27ae60; color: white; margin-top: 10px; }
+        /* Styles Accueil (PROJET) */
+        .hero-card { background: linear-gradient(135deg, var(--adn-blue) 0%, #1e2a5a 100%); color: white; padding: 30px 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .hero-card h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; }
+        .hero-card p { font-size: 0.9rem; opacity: 0.8; margin-top: 10px; }
         
-        /* Bibliothèque de commentaires Excel */
-        .comment-grid { display: grid; gap: 8px; margin-top: 10px; }
-        .comment-btn { text-align: left; background: #f0f4f8; padding: 10px; border-radius: 6px; font-size: 0.85em; border: 1px solid #d1d9e6; cursor: pointer; line-height: 1.4; }
-        .comment-btn:active { background: #dce4ee; border-color: var(--adn-gold); }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #eee; }
+        h2 { font-size: 1.1rem; color: var(--adn-blue); margin-bottom: 15px; border-left: 4px solid var(--adn-gold); padding-left: 10px; }
 
-        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 15px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
+        .btn-main { background: var(--adn-blue); color: white; }
+        .btn-photo { background: #444; color: white; }
+        .btn-save { background: #27ae60; color: white; }
+
+        /* Grille de commentaires Excel */
+        .excel-comments { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 15px; }
+        .comment-tag { background: #f0f4f8; padding: 12px; border-radius: 8px; font-size: 0.85rem; border: 1px solid #d1d9e6; cursor: pointer; line-height: 1.4; color: #444; }
+        .comment-tag:active { background: #e2e8f0; border-color: var(--adn-gold); }
+
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 20px; }
         .gallery img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
-        
+
         #canvas-hidden { display: none; }
-        .settings-info { font-size: 0.8em; color: #666; font-style: italic; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="tabs" id="tabBar">
-    <div class="tab active" onclick="showTab('DASHBOARD')">🏠 PROJET</div>
-    <div class="tab" onclick="showTab('ENVELOPPE')">🏗️ ENVELOPPE</div>
-    <div class="tab" onclick="showTab('SOUS-SOLS')">🕳️ SOUS-SOLS</div>
-    <div class="tab" onclick="showTab('RÉSEAUX')">💧 RÉSEAUX / GAZ</div>
-    <div class="tab" onclick="showTab('SÉCURITÉ')">🛡️ SÉCURITÉ</div>
-    <div class="tab" onclick="showTab('EXPORT')">📦 EXPORT</div>
+    <div class="tab active" onclick="showTab('DASHBOARD')">Projet</div>
+    <div class="tab" onclick="showTab('ENVELOPPE')">Enveloppe</div>
+    <div class="tab" onclick="showTab('SOUS-SOLS')">Sous-sols</div>
+    <div class="tab" onclick="showTab('RÉSEAUX')">Réseaux / Gaz</div>
+    <div class="tab" onclick="showTab('SÉCURITÉ')">Sécurité</div>
+    <div class="tab" onclick="showTab('EXPORT')">Export</div>
 </div>
 
 <div class="container">
     <div id="view-DASHBOARD" class="view active">
+        <div class="hero-card">
+            <h1>MyDiag DTG</h1>
+            <p>Assistant de saisie terrain ADN Analysimmo</p>
+        </div>
+        
         <div class="card">
-            <h2>Configuration de la mission</h2>
-            <label>Copropriété / Référence :</label>
-            <input type="text" id="projName" placeholder="Ex: RÉSIDENCE DES LACS" oninput="saveData()">
-            <label>Identifiant API (Sera masqué) :</label>
-            <input type="password" id="apiKey" placeholder="sk-..." oninput="saveData()">
-            <div class="settings-info">L'identifiant est nécessaire pour la reconnaissance automatique des fissures.</div>
+            <h2>Identification Mission</h2>
+            <input type="text" id="projName" placeholder="Nom de la copropriété / N° de dossier" oninput="persist()">
+            
+            <h2 style="margin-top:25px;">Connecteurs</h2>
+            <input type="password" id="apiKey" placeholder="Configuration API (Masquée)" oninput="persist()">
+            <p style="font-size: 0.75rem; color: #888; margin-top: -5px;">Indispensable pour l'analyse visuelle des pathologies.</p>
+        </div>
+
+        <div class="card" style="text-align: center; border: 1px dashed var(--adn-gold);">
+            <p style="font-size: 0.85rem; margin: 0;">Prêt pour la visite. <br>Naviguez dans les onglets pour débuter les photos.</p>
         </div>
     </div>
 
     <div id="view-SECTION" class="view">
         <h2 id="sectionTitle">Rubrique</h2>
         <div class="card">
-            <label>Ouvrage à diagnostiquer :</label>
-            <select id="subPoste" onchange="loadExcelComments()"></select>
-            
-            <button class="btn-capture" onclick="document.getElementById('cameraInput').click()">📸 PRENDRE PHOTO</button>
-            <input type="file" id="cameraInput" accept="image/*" capture="camera" style="display:none" onchange="onCapture(event)">
+            <select id="subPoste" onchange="loadExcelList()"></select>
+            <button class="btn-photo" onclick="document.getElementById('camIn').click()">📸 PRENDRE PHOTO</button>
+            <input type="file" id="camIn" accept="image/*" capture="camera" style="display:none" onchange="onImgLoad(event)">
         </div>
 
         <div id="editor" class="card" style="display:none; border: 2px solid var(--adn-gold);">
-            <label>Commentaire à incruster sur PNG :</label>
-            <textarea id="activeComment" rows="4"></textarea>
-            
-            <div id="excelBank" class="comment-grid"></div>
-            
-            <button class="btn-save" onclick="finalizeImage()">✅ VALIDER ET SAUVER</button>
+            <textarea id="finalTxt" rows="4" placeholder="Commentaire..."></textarea>
+            <div id="excelList" class="excel-comments"></div>
+            <button class="btn-save" onclick="burnAndSave()">💾 SAUVEGARDER PNG</button>
         </div>
 
-        <div class="gallery" id="sectionGallery"></div>
+        <div class="gallery" id="secGal"></div>
     </div>
 
     <div id="view-EXPORT" class="view">
         <div class="card">
-            <h2>Exportation pour PC</h2>
-            <p>Nombre de photos traitées : <strong id="pCount">0</strong></p>
-            <button onclick="exportHTML()" style="background:#34495e; color:white; margin-bottom:10px;">📄 EXPORT TOTAL (Fichier HTML PC)</button>
-            <button onclick="exportZIP()" style="background:#e67e22; color:white;">📦 EXPORT ZIP (PNG triés)</button>
-            <button onclick="resetApp()" style="background:#c0392b; color:white; margin-top:30px; font-size:10px;">RÉINITIALISER TOUT</button>
+            <h2>Génération des fichiers</h2>
+            <p>Photos dans l'album : <strong id="pStat">0</strong></p>
+            <button onclick="exportHTML()" style="background:var(--adn-blue); color:white; margin-bottom:12px;">📄 RAPPORT HTML (Ouverture PC)</button>
+            <button onclick="exportZIP()" style="background:var(--adn-gold); color:white;">📦 ARCHIVE ZIP (PNG Triés)</button>
         </div>
     </div>
 </div>
@@ -97,161 +105,162 @@
 <canvas id="canvas-hidden"></canvas>
 
 <script>
-    // --- NOMENCLATURE & COMMENTAIRES EXTRAITS DU EXCEL ---
-    const DB = {
+    // --- DATABASE INTEGRATION (GAZ & OCG INCLUS) ---
+    const NOMENCLATURE = {
         'ENVELOPPE': {
             'FONDATIONS': ["FONDATIONS : OK. Pas de désordres symptomatiques.", "Fissures d’allure oblique en façade : présomption de tassement."],
-            'MURS ET FAÇADES': ["Pierre apparentes.", "Épaufrures de béton : défaut d’enrobage.", "Façade avec ITE présente.", "Micro-fissurage superficiel."],
+            'MURS ET FAÇADES': ["Pierre apparentes.", "Épaufrures de béton : défaut d’enrobage.", "Micro-fissurage superficiel."],
             'COUVERTURE': ["Tuiles mécanique à emboîtement.", "Toit-terrasse PVC avec graviers.", "Infiltrations localisées observées."],
             'BALCONS': ["Garde-corps conformes (H > 1m).", "Épaufrures en nez de dalle.", "Oxydation des fers."],
-            'PORTES': ["Porte d'accès bois vétuste.", "Porte d'accès vitrée avec badge Vigik.", "Porte Coupe-Feu de parking présente."]
+            'FENÊTRES': ["Menuiseries en bon état.", "Simple vitrage : prévoir remplacement pour confort thermique."]
         },
         'SOUS-SOLS': {
             'CAVES': ["Caves sèches.", "Humidité importante et salpêtre.", "Cloisonnement bois claire-voie."],
-            'PARKING': ["Marquage sol conforme.", "Marquage absent ou vétuste.", "Porte motorisée fonctionnelle."]
+            'PARKING': ["Marquage sol conforme.", "Porte motorisée fonctionnelle."]
         },
         'RÉSEAUX': {
-            'GAZ (RÉSEAU)': ["Bâtiment raccordé au réseau gaz.", "Compteurs gaz en gaine technique accessible.", "Vannes d'arrêt individuelles identifiées."],
-            'COUPURE GAZ (OCG)': ["Organe de Coupure Générale (OCG) identifié à l'extérieur.", "OCG non signalé ou difficile d'accès.", "Clé de manœuvre absente du boîtier.", "Consignes de sécurité absentes près de l'OCG."],
-            'EAU FROIDE': ["Compteurs en parties communes.", "Traces de corrosion sur colonnes montantes.", "Pression et débit corrects."],
-            'VENTILATION': ["VMC Simple Flux.", "VMC Hygro B.", "Ventilation naturelle par conduits."]
+            'GAZ (RÉSEAU)': ["Bâtiment raccordé au réseau gaz.", "Compteurs gaz accessibles en parties communes."],
+            'COUPURE GAZ (OCG)': [
+                "L’organe de coupure générale (OCG) est accessible et signalé.",
+                "OCG localisé : boîtier de protection et clé de manœuvre présents.",
+                "Défaut : Clé de manœuvre absente du boîtier.",
+                "Défaut : Consignes de sécurité gaz non affichées.",
+                "Défaut : OCG non signalé ou inaccessible."
+            ],
+            'EAU FROIDE': ["Compteurs individuels identifiés.", "Traces de corrosion sur colonnes montantes."],
+            'VENTILATION': ["VMC Simple Flux.", "VMC Hygro B.", "Ventilation naturelle."]
         },
         'SÉCURITÉ': {
-            'SÉCURITÉ INCENDIE': ["Extincteurs à jour de vérification.", "Blocs de secours (BAES) OK.", "Trappe de désenfumage fonctionnelle."],
-            'AMIANTE': ["DTA fourni et à jour.", "DTA non fourni.", "Immeuble construit après 1997 (Exempt)."],
-            'PLOMB': ["CREP fourni (Immeuble < 1949).", "Immeuble construit après 1949 (Exempt)."],
-            'CHAUFFERIE': ["Porte coupe-feu conforme.", "Livret de chaufferie à jour.", "Vérifications périodiques triennales OK."]
+            'INCENDIE': ["Extincteurs à jour.", "BAES fonctionnels.", "Trappe de désenfumage OK."],
+            'AMIANTE / PLOMB': ["DTA fourni et à jour.", "CREP fourni.", "DTA non transmis.", "CREP absent."],
+            'CHAUFFERIE': ["Porte coupe-feu conforme.", "Livret de chaufferie présent et à jour."]
         }
     };
 
-    let state = { name: "", apiKey: "", photos: [] };
-    let activeSection = "";
+    let appState = { name: "", key: "", items: [] };
+    let activeSec = "";
 
     function showTab(cat) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         event.currentTarget.classList.add('active');
 
-        if (DB[cat]) {
-            activeSection = cat;
+        if (NOMENCLATURE[cat]) {
+            activeSec = cat;
             document.getElementById('view-SECTION').classList.add('active');
             document.getElementById('sectionTitle').innerText = cat;
             const sel = document.getElementById('subPoste');
-            sel.innerHTML = Object.keys(DB[cat]).map(k => `<option value="${k}">${k}</option>`).join('');
-            loadExcelComments();
-            refreshGallery();
+            sel.innerHTML = Object.keys(NOMENCLATURE[cat]).map(k => `<option value="${k}">${k}</option>`).join('');
+            loadExcelList();
+            drawGallery();
         } else {
             document.getElementById('view-' + cat).classList.add('active');
         }
-        if(cat === 'EXPORT') document.getElementById('pCount').innerText = state.photos.length;
+        if(cat === 'EXPORT') document.getElementById('pStat').innerText = appState.items.length;
     }
 
-    function loadExcelComments() {
+    function loadExcelList() {
         const sub = document.getElementById('subPoste').value;
-        const bank = document.getElementById('excelBank');
-        bank.innerHTML = DB[activeSection][sub].map(c => 
-            `<div class="comment-btn" onclick="selectComment('${c.replace(/'/g, "\\'")}')">${c}</div>`
+        const list = document.getElementById('excelList');
+        list.innerHTML = NOMENCLATURE[activeSec][sub].map(c => 
+            `<div class="comment-tag" onclick="inject('${c.replace(/'/g, "\\"')}')">${c}</div>`
         ).join('');
     }
 
-    function selectComment(t) { document.getElementById('activeComment').value = t; }
+    function inject(t) { document.getElementById('finalTxt').value = t; }
 
-    function onCapture(e) {
+    function onImgLoad(e) {
         const file = e.target.files[0];
         if(!file) return;
         document.getElementById('editor').style.display = 'block';
-        document.getElementById('activeComment').value = "Analyse en cours...";
-        
+        document.getElementById('finalTxt').value = "Analyse visuelle...";
         const reader = new FileReader();
         reader.onload = (ev) => {
-            window.currentBase64 = ev.target.result;
-            runAIAnalysis(ev.target.result);
+            window.tempB64 = ev.target.result;
+            aiVision(ev.target.result);
         };
         reader.readAsDataURL(file);
     }
 
-    async function runAIAnalysis(img) {
-        if(!state.apiKey) { document.getElementById('activeComment').value = ""; return; }
+    async function aiVision(b64) {
+        if(!appState.key) { document.getElementById('finalTxt').value = ""; return; }
         try {
             const res = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${state.apiKey}`},
+                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${appState.key}`},
                 body: JSON.stringify({
                     model: "gpt-4o",
                     messages: [{role: "user", content: [
-                        {type: "text", text: "Expert bâtiment: fais une légende courte (150 car) pour ce diagnostic DTG."},
-                        {type: "image_url", image_url: {url: img}}
+                        {type: "text", text: "Expert bâtiment: fais une légende technique courte (150 car) pour ce DTG."},
+                        {type: "image_url", image_url: {url: b64}}
                     ]}]
                 })
             });
             const d = await res.json();
-            document.getElementById('activeComment').value = d.choices[0].message.content;
-        } catch(e) { document.getElementById('activeComment').value = ""; }
+            document.getElementById('finalTxt').value = d.choices[0].message.content;
+        } catch(e) { document.getElementById('finalTxt').value = ""; }
     }
 
-    function finalizeImage() {
-        const canvas = document.getElementById('canvas-hidden');
-        const ctx = canvas.getContext('2d');
+    function burnAndSave() {
+        const cvs = document.getElementById('canvas-hidden');
+        const ctx = cvs.getContext('2d');
         const img = new Image();
         img.onload = () => {
-            canvas.width = 1000; canvas.height = 750;
+            cvs.width = 1000; cvs.height = 750;
             ctx.drawImage(img, 0, 0, 1000, 750);
-            ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0, 650, 1000, 100);
-            ctx.fillStyle = "#FFD700"; ctx.font = "bold 24px Arial";
-            ctx.fillText(document.getElementById('subPoste').value, 20, 685);
-            ctx.fillStyle = "white"; ctx.font = "20px Arial";
-            ctx.fillText(document.getElementById('activeComment').value, 20, 725);
+            ctx.fillStyle = "rgba(0,0,0,0.85)"; ctx.fillRect(0, 650, 1000, 100);
+            ctx.fillStyle = "#c5a059"; ctx.font = "bold 22px Arial";
+            ctx.fillText(document.getElementById('subPoste').value, 25, 685);
+            ctx.fillStyle = "white"; ctx.font = "19px Arial";
+            ctx.fillText(document.getElementById('finalTxt').value, 25, 725);
 
-            state.photos.push({
-                sec: activeSection,
+            appState.items.push({
+                sec: activeSec,
                 sub: document.getElementById('subPoste').value,
-                txt: document.getElementById('activeComment').value,
-                img: canvas.toDataURL("image/png")
+                txt: document.getElementById('finalTxt').value,
+                b64: cvs.toDataURL("image/png")
             });
-            saveData();
-            refreshGallery();
+            persist();
+            drawGallery();
             document.getElementById('editor').style.display = 'none';
         };
-        img.src = window.currentBaseBase64 || window.currentBase64;
+        img.src = window.tempB64;
     }
 
-    function refreshGallery() {
-        const g = document.getElementById('sectionGallery');
-        g.innerHTML = state.photos.filter(p => p.sec === activeSection).map(p => `<img src="${p.img}">`).join('');
+    function drawGallery() {
+        const g = document.getElementById('secGal');
+        g.innerHTML = appState.items.filter(p => p.sec === activeSec).map(p => `<img src="${p.b64}">`).join('');
     }
 
-    function saveData() {
-        state.name = document.getElementById('projName').value;
-        state.apiKey = document.getElementById('apiKey').value;
-        localStorage.setItem('diag_dtg_pro_v3', JSON.stringify(state));
+    function persist() {
+        appState.name = document.getElementById('projName').value;
+        appState.key = document.getElementById('apiKey').value;
+        localStorage.setItem('diag_dtg_adn_v4', JSON.stringify(appState));
     }
 
-    // --- EXPORTS ---
     function exportHTML() {
-        let html = `<html><head><title>Rapport ${state.name}</title><style>body{font-family:sans-serif;padding:20px;background:#f0f0f0} .photo{background:white;padding:10px;margin-bottom:20px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1)} img{width:100%;max-width:600px;border-radius:5px;} h1{color:#101844}</style></head><body><h1>Rapport DTG : ${state.name}</h1>`;
-        state.photos.forEach(p => {
-            html += `<div class="photo"><h3>${p.sec} - ${p.sub}</h3><img src="${p.img}"><p>${p.txt}</p></div>`;
+        let h = `<html><body style="font-family:sans-serif;padding:30px;background:#f0f0f0;"><h1>Rapport de visite : ${appState.name}</h1>`;
+        appState.items.forEach(p => {
+            h += `<div style="background:white;padding:15px;margin-bottom:20px;border-radius:10px;"><h3>${p.sec} > ${p.sub}</h3><img src="${p.b64}" style="max-width:100%;"><p>${p.txt}</p></div>`;
         });
-        html += `</body></html>`;
-        const blob = new Blob([html], {type:'text/html'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `RAPPORT_${state.name}.html`; a.click();
+        h += `</body></html>`;
+        const b = new Blob([h], {type:'text/html'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `DTG_${appState.name}.html`; a.click();
     }
 
     async function exportZIP() {
         const zip = new JSZip();
-        state.photos.forEach((p, i) => zip.file(`${p.sec}/${p.sub}_${i}.png`, p.img.split(',')[1], {base64: true}));
-        const blob = await zip.generateAsync({type:"blob"});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `DTG_${state.name}.zip`; a.click();
+        appState.items.forEach((p, i) => zip.file(`${p.sec}/${p.sub}_${i}.png`, p.b64.split(',')[1], {base64: true}));
+        const content = await zip.generateAsync({type:"blob"});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(content); a.download = `DIAG_PHOTOS_${appState.name}.zip`; a.click();
     }
 
-    function resetApp() { if(confirm("Supprimer toutes les photos et données ?")) { localStorage.clear(); location.reload(); } }
-
     window.onload = () => {
-        const s = localStorage.getItem('diag_dtg_pro_v3');
+        const s = localStorage.getItem('diag_dtg_adn_v4');
         if(s) {
-            state = JSON.parse(s);
-            document.getElementById('projName').value = state.name || "";
-            document.getElementById('apiKey').value = state.apiKey || "";
+            appState = JSON.parse(s);
+            document.getElementById('projName').value = appState.name || "";
+            document.getElementById('apiKey').value = appState.key || "";
         }
     };
 </script>
