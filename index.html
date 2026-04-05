@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyDiag DTG - Expert</title>
+    <title>MyDiag DTG - Expert ADN</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root { --adn-blue: #101844; --adn-gold: #c5a059; --bg: #f4f6f9; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; color: #333; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; color: #333; }
         
+        /* Navigation */
         .tabs { display: flex; overflow-x: auto; background: var(--adn-blue); scrollbar-width: none; border-bottom: 3px solid var(--adn-gold); flex-shrink: 0; }
         .tab { padding: 15px 20px; white-space: nowrap; cursor: pointer; color: white; opacity: 0.6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
         .tab.active { opacity: 1; background: rgba(255,255,255,0.1); }
@@ -25,20 +26,19 @@
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.85rem; color: #555; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 14px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; box-sizing: border-box; background: #fff; }
         
-        input#fileNumber { font-weight: bold; letter-spacing: 2px; color: var(--adn-blue); }
+        /* Champ Numérique Dossier */
+        input#fileNumber { font-weight: bold; letter-spacing: 2px; color: var(--adn-blue); font-size: 1.2rem; }
 
         .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 15px; border: 1px solid #eee; }
-        .btn-action { background: var(--adn-blue); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; margin: 10px 0; font-size: 0.9rem; }
-        .btn-gallery { background: #546e7a; color: white; } /* Bouton spécifique galerie */
-        .btn-save { background: #27ae60; color: white; }
-
-        .comment-list { display: grid; gap: 8px; margin-top: 15px; }
-        .comment-item { background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.85rem; cursor: pointer; }
+        .btn-action { background: var(--adn-blue); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; margin: 8px 0; font-size: 0.9rem; }
+        .btn-lib { background: #546e7a; }
+        .btn-save { background: #27ae60; }
 
         .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 20px; }
         .gallery img { width: 100%; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
         
         #canvas-hidden { display: none; }
+        .comment-item { background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 0.85rem; cursor: pointer; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -46,8 +46,7 @@
 <div class="tabs">
     <div class="tab active" onclick="showTab('DASHBOARD')">Projet</div>
     <div class="tab" onclick="showTab('ENVELOPPE')">Enveloppe</div>
-    <div class="tab" onclick="showTab('SOUS-SOLS')">Sous-sols</div>
-    <div class="tab" onclick="showTab('FLUIDES')">Réseaux / Gaz</div>
+    <div class="tab" onclick="showTab('FLUIDES')">Fluides / Gaz</div>
     <div class="tab" onclick="showTab('SECURITE')">Sécurité</div>
     <div class="tab" onclick="showTab('EXPORT')">Export</div>
 </div>
@@ -57,32 +56,32 @@
         <div class="welcome-card">
             <h1>MyDiag DTG</h1>
             <div class="input-group">
-                <label>N° de dossier (6 chiffres max) :</label>
-                <input type="number" id="fileNumber" inputmode="numeric" pattern="[0-9]*" placeholder="000000" oninput="limit6(this)">
+                <label>N° de dossier (6 chiffres) :</label>
+                <input type="number" id="fileNumber" inputmode="numeric" pattern="[0-9]*" placeholder="Ex: 123456" oninput="limit6(this)">
             </div>
             <div class="input-group">
-                <label>Nom de la Copropriété :</label>
-                <input type="text" id="projName" placeholder="Ex: Résidence Analysimmo" oninput="save()">
+                <label>Copropriété :</label>
+                <input type="text" id="projName" placeholder="Nom de l'immeuble" oninput="save()">
             </div>
         </div>
     </div>
 
     <div id="view-SECTION" class="view">
-        <h2 id="secTitle" style="color:var(--adn-blue); font-size: 1.2rem;">Rubrique</h2>
+        <h2 id="secTitle" style="color:var(--adn-blue)">Rubrique</h2>
         <div class="card">
-            <label>Ouvrage :</label>
-            <select id="subPoste" onchange="loadExcel()"></select>
+            <label>Poste :</label>
+            <select id="subPoste" onchange="loadComments()"></select>
             
-            <button class="btn-action" onclick="openMedia('camera')">📸 PRENDRE UNE PHOTO</button>
-            <button class="btn-action btn-gallery" onclick="openMedia('library')">🖼️ CHOISIR DANS LA GALERIE</button>
+            <button class="btn-action" onclick="document.getElementById('inCam').click()">📸 PRENDRE UNE PHOTO</button>
+            <button class="btn-action btn-lib" onclick="document.getElementById('inLib').click()">🖼️ GALERIE PHOTOS</button>
             
-            <input type="file" id="inputCam" accept="image/*" capture="camera" style="display:none" onchange="onFile(event)">
-            <input type="file" id="inputLib" accept="image/*" style="display:none" onchange="onFile(event)">
+            <input type="file" id="inCam" accept="image/*" capture="camera" style="display:none" onchange="onFile(event)">
+            <input type="file" id="inLib" accept="image/*" style="display:none" onchange="onFile(event)">
         </div>
 
         <div id="editor" class="card" style="display:none; border: 2px solid var(--adn-gold);">
-            <textarea id="finalTxt" rows="3"></textarea>
-            <div id="commentBox" class="comment-list"></div>
+            <textarea id="finalTxt" rows="3" placeholder="Commentaire..."></textarea>
+            <div id="commentList"></div>
             <button class="btn-action btn-save" onclick="savePhoto()">💾 VALIDER & SAUVER PNG</button>
         </div>
 
@@ -91,9 +90,10 @@
 
     <div id="view-EXPORT" class="view">
         <div class="card">
-            <h2>Fin de mission</h2>
-            <button class="btn-action" onclick="exportHTML()" style="background:#444">📄 VISIONNEUSE PC</button>
+            <h2>Actions</h2>
+            <button class="btn-action" onclick="exportHTML()" style="background:#444">📄 VISIONNEUSE PC (HTML)</button>
             <button class="btn-action" onclick="exportZIP()" style="background:var(--adn-gold)">📦 EXPORT ZIP (PNG)</button>
+            <button class="btn-action" onclick="resetApp()" style="background:#c0392b; margin-top:20px; font-size:10px;">EFFACER TOUT</button>
         </div>
     </div>
 </div>
@@ -101,25 +101,23 @@
 <canvas id="canvas-hidden"></canvas>
 
 <script>
-    const MY_API_KEY = "AIzaSyALgB9zjGn0d7X7z5WeelO2vMEYTwwx-Fc";
+    // Clé API injectée (Invisible sur l'interface)
+    const API_KEY = "AIzaSyALgB9zjGn0d7X7z5WeelO2vMEYTwwx-Fc";
 
     const DB = {
         'ENVELOPPE': {
             'MURS ET FAÇADES': ["Pierre apparentes.", "Épaufrures de béton.", "Fissures structurelles."],
             'COUVERTURE': ["Tuiles mécanique.", "Toit-terrasse PVC."],
-            'BALCONS': ["Garde-corps conformes.", "Oxydation des fers."],
-        },
-        'SOUS-SOLS': {
-            'CAVES': ["Caves sèches.", "Humidité / salpêtre."],
-            'PARKING': ["Marquage sol conforme.", "Porte motorisée OK."]
+            'FONDATIONS': ["FONDATIONS : OK.", "Tassement différentiel présumé."]
         },
         'FLUIDES': {
             'COUPURE GAZ (OCG)': ["OCG accessible.", "Clé de manœuvre absente.", "Consignes absentes."],
+            'GAZ RÉSEAU': ["Raccordé gaz.", "Compteurs dans communs."],
             'VENTILATION': ["VMC Simple Flux.", "VMC Hygro B."]
         },
         'SECURITE': {
-            'INCENDIE': ["Extincteurs OK.", "Trappe désenfumage OK."],
-            'AMIANTE / PLOMB': ["DTA fourni.", "CREP fourni."]
+            'INCENDIE': ["Extincteurs OK.", "BAES fonctionnels.", "Trappe désenfumage OK."],
+            'AMIANTE/PLOMB': ["DTA fourni.", "CREP fourni."]
         }
     };
 
@@ -141,41 +139,38 @@
             document.getElementById('view-SECTION').classList.add('active');
             document.getElementById('secTitle').innerText = cat;
             document.getElementById('subPoste').innerHTML = Object.keys(DB[cat]).map(k => `<option value="${k}">${k}</option>`).join('');
-            loadExcel();
+            loadComments();
             drawGallery();
         } else {
             document.getElementById('view-' + cat).classList.add('active');
         }
     }
 
-    // Fonction pour forcer le choix ou l'ouverture
-    function openMedia(type) {
-        if(type === 'camera') document.getElementById('inputCam').click();
-        else document.getElementById('inputLib').click();
+    function loadComments() {
+        const sub = document.getElementById('subPoste').value;
+        document.getElementById('commentList').innerHTML = DB[currentSec][sub].map(c => 
+            `<div class="comment-item" onclick="document.getElementById('finalTxt').value='${c.replace(/'/g, "\\'")}'">${c}</div>`
+        ).join('');
     }
 
     function onFile(e) {
         const file = e.target.files[0];
         if(!file) return;
         document.getElementById('editor').style.display = 'block';
-        document.getElementById('finalTxt').value = "Analyse en cours...";
         const reader = new FileReader();
-        reader.onload = (ev) => { 
-            window.lastB64 = ev.target.result; 
-            callAI(ev.target.result); 
-        };
+        reader.onload = (ev) => { window.lastB64 = ev.target.result; callAI(ev.target.result); };
         reader.readAsDataURL(file);
     }
 
     async function callAI(b64) {
-        if(!MY_API_KEY) return;
+        if(!API_KEY) return;
         try {
             const res = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${MY_API_KEY}`},
+                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}`},
                 body: JSON.stringify({
                     model: "gpt-4o",
-                    messages: [{role: "user", content: [{type: "text", text: "Expert DTG. Légende courte (150 car) pour cette photo."}, {type: "image_url", image_url: {url: b64}}]}]
+                    messages: [{role: "user", content: [{type: "text", text: "Expert DTG: légende courte (150 car) pour cette photo."}, {type: "image_url", image_url: {url: b64}}]}]
                 })
             });
             const d = await res.json();
@@ -192,21 +187,13 @@
             ctx.drawImage(img, 0, 0, 1000, 750);
             ctx.fillStyle = "rgba(0,0,0,0.85)"; ctx.fillRect(0, 650, 1000, 100);
             ctx.fillStyle = "#c5a059"; ctx.font = "bold 22px Arial";
-            ctx.fillText(document.getElementById('subPoste').value + " - Dossier " + state.fileNum, 25, 685);
+            ctx.fillText(document.getElementById('subPoste').value + " | DOSSIER " + state.fileNum, 25, 685);
             ctx.fillStyle = "white"; ctx.font = "19px Arial";
             ctx.fillText(document.getElementById('finalTxt').value, 25, 725);
-
             state.photos.push({ sec: currentSec, sub: document.getElementById('subPoste').value, txt: document.getElementById('finalTxt').value, b64: cvs.toDataURL("image/png") });
             save(); drawGallery(); document.getElementById('editor').style.display = 'none';
         };
         img.src = window.lastB64;
-    }
-
-    function loadExcel() {
-        const sub = document.getElementById('subPoste').value;
-        document.getElementById('commentBox').innerHTML = DB[currentSec][sub].map(c => 
-            `<div class="comment-item" onclick="document.getElementById('finalTxt').value='${c.replace(/'/g, "\\'")}'">${c}</div>`
-        ).join('');
     }
 
     function drawGallery() {
@@ -216,12 +203,12 @@
     function save() {
         state.name = document.getElementById('projName').value;
         state.fileNum = document.getElementById('fileNumber').value;
-        localStorage.setItem('dtg_v8', JSON.stringify(state));
+        localStorage.setItem('dtg_v9', JSON.stringify(state));
     }
 
     function exportHTML() {
         let h = `<html><body style="font-family:sans-serif;padding:30px;background:#f0f0f0;"><h1>Dossier ${state.fileNum} : ${state.name}</h1>`;
-        state.photos.forEach(p => { h += `<div style="background:white;padding:20px;margin-bottom:20px;border-radius:10px;"><h3>${p.sec} > ${p.sub}</h3><img src="${p.b64}" style="width:100%;"><p>${p.txt}</p></div>`; });
+        state.photos.forEach(p => h += `<div style="background:white;padding:15px;margin-bottom:20px;border-radius:10px;"><h3>${p.sec} > ${p.sub}</h3><img src="${p.b64}" style="max-width:100%;"><p>${p.txt}</p></div>`);
         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([h + '</body></html>'], {type:'text/html'})); a.download = `RAPPORT_${state.fileNum}.html`; a.click();
     }
 
@@ -229,12 +216,14 @@
         const zip = new JSZip();
         state.photos.forEach((p, i) => zip.file(`${p.sec}/${p.sub}_${i}.png`, p.b64.split(',')[1], {base64: true}));
         zip.generateAsync({type:"blob"}).then(b => {
-            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `DTG_${state.fileNum}.zip`; a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `PHOTOS_DTG_${state.fileNum}.zip`; a.click();
         });
     }
 
+    function resetApp() { if(confirm("Supprimer tout ?")) { localStorage.clear(); location.reload(); } }
+
     window.onload = () => {
-        const s = localStorage.getItem('dtg_v8');
+        const s = localStorage.getItem('dtg_v9');
         if(s) { state = JSON.parse(s); document.getElementById('projName').value = state.name; document.getElementById('fileNumber').value = state.fileNum; }
     };
 </script>
