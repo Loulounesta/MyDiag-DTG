@@ -3,178 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyDiag DTG - ADN Analysimmo</title>
+    <title>MyDiag DTG Pro - Expert ADN</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { --adn-blue: #1a237e; --adn-light: #0288d1; --adn-green: #2e7d32; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        :root { --adn-blue: #101844; --adn-gold: #c5a059; --bg: #f5f7fa; --text: #333; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; color: var(--text); }
         
-        /* Navigation par Chapitres Excel */
-        .tabs { display: flex; overflow-x: auto; background: var(--adn-blue); color: white; flex-shrink: 0; scrollbar-width: none; }
-        .tab { padding: 12px 15px; white-space: nowrap; cursor: pointer; border-bottom: 3px solid transparent; font-size: 0.8em; opacity: 0.7; }
-        .tab.active { opacity: 1; border-bottom: 3px solid #ffeb3b; background: rgba(255,255,255,0.1); font-weight: bold; }
+        /* Navigation Onglets Excel */
+        .tabs { display: flex; overflow-x: auto; background: var(--adn-blue); color: white; flex-shrink: 0; scrollbar-width: none; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .tab { padding: 14px 20px; white-space: nowrap; cursor: pointer; border-bottom: 4px solid transparent; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .tab.active { opacity: 1; border-bottom: 4px solid var(--adn-gold); background: rgba(255,255,255,0.05); font-weight: bold; }
 
-        .container { flex: 1; overflow-y: auto; padding: 15px; }
+        .container { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
         .view { display: none; }
         .view.active { display: block; }
 
-        .card { background: white; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        h2 { font-size: 1.1em; color: var(--adn-blue); margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        
-        /* Formulaire */
-        select, textarea, input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; }
-        .btn-photo { background: #455a64; color: white; }
-        .btn-save { background: var(--adn-green); color: white; }
+        .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e1e4e8; }
+        h2 { font-size: 1.2em; color: var(--adn-blue); margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
 
-        /* Commentaires Types du Excel */
-        .comment-bank { margin-top: 10px; max-height: 200px; overflow-y: auto; border: 1px dashed #ccc; padding: 5px; border-radius: 4px; }
-        .comment-item { font-size: 0.8em; background: #f0f7ff; padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 3px solid var(--adn-light); cursor: pointer; }
-        .comment-item:active { background: #d0e7ff; }
-
-        /* Galerie */
-        .gallery { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-        .thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+        select, textarea, input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ced4da; border-radius: 8px; font-size: 15px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-capture { background: #2c3e50; color: white; }
+        .btn-save { background: #27ae60; color: white; margin-top: 10px; }
         
-        #canvas-buffer { display: none; }
+        /* Bibliothèque de commentaires Excel */
+        .comment-grid { display: grid; gap: 8px; margin-top: 10px; }
+        .comment-btn { text-align: left; background: #f0f4f8; padding: 10px; border-radius: 6px; font-size: 0.85em; border: 1px solid #d1d9e6; cursor: pointer; line-height: 1.4; }
+        .comment-btn:active { background: #dce4ee; border-color: var(--adn-gold); }
+
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 15px; }
+        .gallery img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
+        
+        #canvas-hidden { display: none; }
+        .settings-info { font-size: 0.8em; color: #666; font-style: italic; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="tabs" id="tabBar">
-    <div class="tab active" onclick="showTab('CONFIG')">⚙️ CONFIG</div>
+    <div class="tab active" onclick="showTab('DASHBOARD')">🏠 PROJET</div>
     <div class="tab" onclick="showTab('ENVELOPPE')">🏗️ ENVELOPPE</div>
     <div class="tab" onclick="showTab('SOUS-SOLS')">🕳️ SOUS-SOLS</div>
-    <div class="tab" onclick="showTab('FLUIDES')">💧 FLUIDES</div>
-    <div class="tab" onclick="showTab('SECURITE')">🛡️ SÉCURITÉ</div>
+    <div class="tab" onclick="showTab('RÉSEAUX')">💧 RÉSEAUX / GAZ</div>
+    <div class="tab" onclick="showTab('SÉCURITÉ')">🛡️ SÉCURITÉ</div>
     <div class="tab" onclick="showTab('EXPORT')">📦 EXPORT</div>
 </div>
 
 <div class="container">
-    <div id="view-CONFIG" class="view active">
+    <div id="view-DASHBOARD" class="view active">
         <div class="card">
-            <h2>Paramètres du Projet</h2>
-            <label>Nom de la copropriété :</label>
-            <input type="text" id="projName" placeholder="Ex: Résidence Belle Vue" oninput="saveGlobal()">
-            <label>Clé API OpenAI :</label>
-            <input type="password" id="apiKey" placeholder="sk-..." oninput="saveGlobal()">
-            <p style="font-size: 0.7em; color: #666;">La clé est stockée uniquement dans votre téléphone.</p>
+            <h2>Configuration de la mission</h2>
+            <label>Copropriété / Référence :</label>
+            <input type="text" id="projName" placeholder="Ex: RÉSIDENCE DES LACS" oninput="saveData()">
+            <label>Identifiant API (Sera masqué) :</label>
+            <input type="password" id="apiKey" placeholder="sk-..." oninput="saveData()">
+            <div class="settings-info">L'identifiant est nécessaire pour la reconnaissance automatique des fissures.</div>
         </div>
     </div>
 
-    <div id="view-POSTE" class="view">
-        <h2 id="currentPosteLabel">Rubrique</h2>
+    <div id="view-SECTION" class="view">
+        <h2 id="sectionTitle">Rubrique</h2>
         <div class="card">
-            <label>Ouvrage (Nomenclature ADN) :</label>
-            <select id="subPoste" onchange="loadCommentBank()"></select>
+            <label>Ouvrage à diagnostiquer :</label>
+            <select id="subPoste" onchange="loadExcelComments()"></select>
             
-            <button class="btn-photo" onclick="document.getElementById('fileInput').click()">📸 PRENDRE PHOTO</button>
-            <input type="file" id="fileInput" accept="image/*" capture="camera" style="display:none" onchange="processCapture(event)">
+            <button class="btn-capture" onclick="document.getElementById('cameraInput').click()">📸 PRENDRE PHOTO</button>
+            <input type="file" id="cameraInput" accept="image/*" capture="camera" style="display:none" onchange="onCapture(event)">
         </div>
 
-        <div id="editZone" class="card" style="display:none;">
-            <label>Légende (IA ou Sélection) :</label>
-            <textarea id="activeLabel" rows="3"></textarea>
+        <div id="editor" class="card" style="display:none; border: 2px solid var(--adn-gold);">
+            <label>Commentaire à incruster sur PNG :</label>
+            <textarea id="activeComment" rows="4"></textarea>
             
-            <div class="comment-bank" id="commentBank">
-                </div>
+            <div id="excelBank" class="comment-grid"></div>
             
-            <button class="btn-save" onclick="saveToGallery()">💾 VALIDER & INCRUSTER</button>
+            <button class="btn-save" onclick="finalizeImage()">✅ VALIDER ET SAUVER</button>
         </div>
 
-        <div class="gallery" id="galleryContainer"></div>
+        <div class="gallery" id="sectionGallery"></div>
     </div>
 
     <div id="view-EXPORT" class="view">
         <div class="card">
-            <h2>Exportation</h2>
-            <p>Photos enregistrées : <strong id="totalCount">0</strong></p>
-            <button onclick="exportZip()" style="background:#d32f2f; color:white;">📦 TÉLÉCHARGER ZIP (PNG)</button>
-            <button onclick="exportJson()" style="background:#546e7a; color:white;">💾 SAUVEGARDER PROJET (JSON)</button>
+            <h2>Exportation pour PC</h2>
+            <p>Nombre de photos traitées : <strong id="pCount">0</strong></p>
+            <button onclick="exportHTML()" style="background:#34495e; color:white; margin-bottom:10px;">📄 EXPORT TOTAL (Fichier HTML PC)</button>
+            <button onclick="exportZIP()" style="background:#e67e22; color:white;">📦 EXPORT ZIP (PNG triés)</button>
+            <button onclick="resetApp()" style="background:#c0392b; color:white; margin-top:30px; font-size:10px;">RÉINITIALISER TOUT</button>
         </div>
     </div>
 </div>
 
-<canvas id="canvas-buffer"></canvas>
+<canvas id="canvas-hidden"></canvas>
 
 <script>
-    // --- BASE DE DONNÉES EXTRAITE DE TON EXCEL ---
-    const DB_EXCEL = {
+    // --- NOMENCLATURE & COMMENTAIRES EXTRAITS DU EXCEL ---
+    const DB = {
         'ENVELOPPE': {
-            'FONDATIONS': ["FONDATIONS : OK. Pas de désordres symptomatiques.", "Fissures d’allure oblique en façade : présomption de tassement différentiel."],
-            'PLANCHERS': ["Dalle béton ou hourdis / entrevous.", "Poutrelles métalliques oxydées : prévoir brossage et traitement."],
-            'MURS, REFENDS ET FAÇADES': ["Pierre apparentes.", "Épaufrures de béton : défaut d’enrobage des aciers.", "Fissures structurelles à surveiller."],
-            'COUVERTURE': ["Tuiles mécanique à emboîtement.", "Toit-terrasse : étanchéité par membrane PVC.", "Défaut d'étanchéité ponctuel."],
-            'FENETRES ET OCCULTATIONS': ["Menuiseries extérieures en bon état.", "Peinture écaillée : vétusté de la protection."]
+            'FONDATIONS': ["FONDATIONS : OK. Pas de désordres symptomatiques.", "Fissures d’allure oblique en façade : présomption de tassement."],
+            'MURS ET FAÇADES': ["Pierre apparentes.", "Épaufrures de béton : défaut d’enrobage.", "Façade avec ITE présente.", "Micro-fissurage superficiel."],
+            'COUVERTURE': ["Tuiles mécanique à emboîtement.", "Toit-terrasse PVC avec graviers.", "Infiltrations localisées observées."],
+            'BALCONS': ["Garde-corps conformes (H > 1m).", "Épaufrures en nez de dalle.", "Oxydation des fers."],
+            'PORTES': ["Porte d'accès bois vétuste.", "Porte d'accès vitrée avec badge Vigik.", "Porte Coupe-Feu de parking présente."]
         },
         'SOUS-SOLS': {
-            'CAVES': ["Caves sèches et ventilées.", "Humidité importante / salpêtre observé.", "Cloisons bois à claire-voie."],
-            'PARKING EN SOUS-SOL': ["Marquage au sol visible.", "Marquage absent ou vétuste.", "Porte motorisée conforme."]
+            'CAVES': ["Caves sèches.", "Humidité importante et salpêtre.", "Cloisonnement bois claire-voie."],
+            'PARKING': ["Marquage sol conforme.", "Marquage absent ou vétuste.", "Porte motorisée fonctionnelle."]
         },
-        'FLUIDES': {
-            'VENTILATION': ["VMC Simple flux autoréglable.", "VMC Hygro B.", "Ventilation naturelle par conduits."],
-            'EAU FROIDE': ["Installation en bon état apparent.", "Traces de corrosion ou suintements ponctuels."],
-            'EAU CHAUDE SANITAIRE': ["Production collective via chaufferie.", "Installations individuelles."],
-            'CHAUFFAGE': ["Collectif gaz.", "Individuel électrique.", "Émetteurs radiateurs fonte/acier."]
+        'RÉSEAUX': {
+            'GAZ (RÉSEAU)': ["Bâtiment raccordé au réseau gaz.", "Compteurs gaz en gaine technique accessible.", "Vannes d'arrêt individuelles identifiées."],
+            'COUPURE GAZ (OCG)': ["Organe de Coupure Générale (OCG) identifié à l'extérieur.", "OCG non signalé ou difficile d'accès.", "Clé de manœuvre absente du boîtier.", "Consignes de sécurité absentes près de l'OCG."],
+            'EAU FROIDE': ["Compteurs en parties communes.", "Traces de corrosion sur colonnes montantes.", "Pression et débit corrects."],
+            'VENTILATION': ["VMC Simple Flux.", "VMC Hygro B.", "Ventilation naturelle par conduits."]
         },
-        'SECURITE': {
-            'SECURITE INCENDIE': ["Extincteurs OK et accessibles.", "BAES fonctionnels.", "Trappe de désenfumage conforme."],
-            'AMIANTE (SECURITE)': ["DTA à jour fourni.", "Aucun DTA transmis au jour de la visite.", "Immeuble non concerné (>1997)."],
-            'PLOMB (SECURITE)': ["Immeuble concerné et conforme (CREP fourni).", "Immeuble concerné et non conforme (CREP absent)."],
-            'ASCENSEURS': ["Contrôle périodique annuel à jour.", "Défaut de contrôle technique obligatoire."]
+        'SÉCURITÉ': {
+            'SÉCURITÉ INCENDIE': ["Extincteurs à jour de vérification.", "Blocs de secours (BAES) OK.", "Trappe de désenfumage fonctionnelle."],
+            'AMIANTE': ["DTA fourni et à jour.", "DTA non fourni.", "Immeuble construit après 1997 (Exempt)."],
+            'PLOMB': ["CREP fourni (Immeuble < 1949).", "Immeuble construit après 1949 (Exempt)."],
+            'CHAUFFERIE': ["Porte coupe-feu conforme.", "Livret de chaufferie à jour.", "Vérifications périodiques triennales OK."]
         }
     };
 
     let state = { name: "", apiKey: "", photos: [] };
-    let currentCat = "";
+    let activeSection = "";
 
-    // --- NAVIGATION ---
     function showTab(cat) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         event.currentTarget.classList.add('active');
 
-        if (DB_EXCEL[cat]) {
-            currentCat = cat;
-            document.getElementById('view-POSTE').classList.add('active');
-            document.getElementById('currentPosteLabel').innerText = cat;
+        if (DB[cat]) {
+            activeSection = cat;
+            document.getElementById('view-SECTION').classList.add('active');
+            document.getElementById('sectionTitle').innerText = cat;
             const sel = document.getElementById('subPoste');
-            sel.innerHTML = Object.keys(DB_EXCEL[cat]).map(k => `<option value="${k}">${k}</option>`).join('');
-            loadCommentBank();
-            renderGallery();
+            sel.innerHTML = Object.keys(DB[cat]).map(k => `<option value="${k}">${k}</option>`).join('');
+            loadExcelComments();
+            refreshGallery();
         } else {
             document.getElementById('view-' + cat).classList.add('active');
         }
-        if(cat === 'EXPORT') document.getElementById('totalCount').innerText = state.photos.length;
+        if(cat === 'EXPORT') document.getElementById('pCount').innerText = state.photos.length;
     }
 
-    function loadCommentBank() {
+    function loadExcelComments() {
         const sub = document.getElementById('subPoste').value;
-        const bank = document.getElementById('commentBank');
-        bank.innerHTML = DB_EXCEL[currentCat][sub].map(txt => 
-            `<div class="comment-item" onclick="setLabel('${txt.replace(/'/g, "\\'")}')">${txt}</div>`
+        const bank = document.getElementById('excelBank');
+        bank.innerHTML = DB[activeSection][sub].map(c => 
+            `<div class="comment-btn" onclick="selectComment('${c.replace(/'/g, "\\'")}')">${c}</div>`
         ).join('');
     }
 
-    function setLabel(t) { document.getElementById('activeLabel').value = t; }
+    function selectComment(t) { document.getElementById('activeComment').value = t; }
 
-    // --- GESTION PHOTO ---
-    function processCapture(e) {
+    function onCapture(e) {
         const file = e.target.files[0];
         if(!file) return;
-        document.getElementById('editZone').style.display = 'block';
-        document.getElementById('activeLabel').value = "Analyse IA...";
-
+        document.getElementById('editor').style.display = 'block';
+        document.getElementById('activeComment').value = "Analyse en cours...";
+        
         const reader = new FileReader();
         reader.onload = (ev) => {
-            window.lastImg = ev.target.result;
-            callVisionAPI(ev.target.result);
+            window.currentBase64 = ev.target.result;
+            runAIAnalysis(ev.target.result);
         };
         reader.readAsDataURL(file);
     }
 
-    async function callVisionAPI(base64) {
-        if(!state.apiKey) { document.getElementById('activeLabel').value = ""; return; }
+    async function runAIAnalysis(img) {
+        if(!state.apiKey) { document.getElementById('activeComment').value = ""; return; }
         try {
             const res = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
@@ -182,79 +179,75 @@
                 body: JSON.stringify({
                     model: "gpt-4o",
                     messages: [{role: "user", content: [
-                        {type: "text", text: "Expert DTG. Fais une légende technique courte pour cette photo (max 150 car)."},
-                        {type: "image_url", image_url: {url: base64}}
+                        {type: "text", text: "Expert bâtiment: fais une légende courte (150 car) pour ce diagnostic DTG."},
+                        {type: "image_url", image_url: {url: img}}
                     ]}]
                 })
             });
             const d = await res.json();
-            document.getElementById('activeLabel').value = d.choices[0].message.content;
-        } catch(e) { document.getElementById('activeLabel').value = "Saisie manuelle..."; }
+            document.getElementById('activeComment').value = d.choices[0].message.content;
+        } catch(e) { document.getElementById('activeComment').value = ""; }
     }
 
-    function saveToGallery() {
-        const canvas = document.getElementById('canvas-buffer');
+    function finalizeImage() {
+        const canvas = document.getElementById('canvas-hidden');
         const ctx = canvas.getContext('2d');
         const img = new Image();
         img.onload = () => {
-            canvas.width = 1200; canvas.height = 900;
-            ctx.drawImage(img, 0, 0, 1200, 900);
-            
-            // Bandeau de légende
-            ctx.fillStyle = "rgba(0,0,0,0.8)";
-            ctx.fillRect(0, 780, 1200, 120);
-            ctx.fillStyle = "white";
-            ctx.font = "bold 28px Arial";
-            ctx.fillText(document.getElementById('subPoste').value, 30, 825);
-            ctx.font = "24px Arial";
-            ctx.fillText(document.getElementById('activeLabel').value, 30, 865);
+            canvas.width = 1000; canvas.height = 750;
+            ctx.drawImage(img, 0, 0, 1000, 750);
+            ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0, 650, 1000, 100);
+            ctx.fillStyle = "#FFD700"; ctx.font = "bold 24px Arial";
+            ctx.fillText(document.getElementById('subPoste').value, 20, 685);
+            ctx.fillStyle = "white"; ctx.font = "20px Arial";
+            ctx.fillText(document.getElementById('activeComment').value, 20, 725);
 
             state.photos.push({
-                cat: currentCat,
+                sec: activeSection,
                 sub: document.getElementById('subPoste').value,
-                data: canvas.toDataURL("image/png")
+                txt: document.getElementById('activeComment').value,
+                img: canvas.toDataURL("image/png")
             });
-            saveGlobal();
-            renderGallery();
-            document.getElementById('editZone').style.display = 'none';
+            saveData();
+            refreshGallery();
+            document.getElementById('editor').style.display = 'none';
         };
-        img.src = window.lastImg;
+        img.src = window.currentBaseBase64 || window.currentBase64;
     }
 
-    function renderGallery() {
-        const cont = document.getElementById('galleryContainer');
-        cont.innerHTML = state.photos.filter(p => p.cat === currentCat).map(p => `<img src="${p.data}" class="thumb">`).join('');
+    function refreshGallery() {
+        const g = document.getElementById('sectionGallery');
+        g.innerHTML = state.photos.filter(p => p.sec === activeSection).map(p => `<img src="${p.img}">`).join('');
     }
 
-    // --- STORAGE & EXPORT ---
-    function saveGlobal() {
+    function saveData() {
         state.name = document.getElementById('projName').value;
         state.apiKey = document.getElementById('apiKey').value;
-        localStorage.setItem('mydiag_dtg_adn', JSON.stringify(state));
+        localStorage.setItem('diag_dtg_pro_v3', JSON.stringify(state));
     }
 
-    async function exportZip() {
-        const zip = new JSZip();
-        state.photos.forEach((p, i) => {
-            zip.file(`${p.cat}/${p.sub}_${i}.png`, p.data.split(',')[1], {base64: true});
+    // --- EXPORTS ---
+    function exportHTML() {
+        let html = `<html><head><title>Rapport ${state.name}</title><style>body{font-family:sans-serif;padding:20px;background:#f0f0f0} .photo{background:white;padding:10px;margin-bottom:20px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1)} img{width:100%;max-width:600px;border-radius:5px;} h1{color:#101844}</style></head><body><h1>Rapport DTG : ${state.name}</h1>`;
+        state.photos.forEach(p => {
+            html += `<div class="photo"><h3>${p.sec} - ${p.sub}</h3><img src="${p.img}"><p>${p.txt}</p></div>`;
         });
-        const blob = await zip.generateAsync({type:"blob"});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `DTG_${state.name || 'Projet'}.zip`;
-        a.click();
+        html += `</body></html>`;
+        const blob = new Blob([html], {type:'text/html'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `RAPPORT_${state.name}.html`; a.click();
     }
 
-    function exportJson() {
-        const blob = new Blob([JSON.stringify(state)], {type: "application/json"});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `SAUVEGARDE_DTG_${state.name}.json`;
-        a.click();
+    async function exportZIP() {
+        const zip = new JSZip();
+        state.photos.forEach((p, i) => zip.file(`${p.sec}/${p.sub}_${i}.png`, p.img.split(',')[1], {base64: true}));
+        const blob = await zip.generateAsync({type:"blob"});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `DTG_${state.name}.zip`; a.click();
     }
+
+    function resetApp() { if(confirm("Supprimer toutes les photos et données ?")) { localStorage.clear(); location.reload(); } }
 
     window.onload = () => {
-        const s = localStorage.getItem('mydiag_dtg_adn');
+        const s = localStorage.getItem('diag_dtg_pro_v3');
         if(s) {
             state = JSON.parse(s);
             document.getElementById('projName').value = state.name || "";
