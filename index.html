@@ -6,19 +6,19 @@
     
     <title>MyDiag DTG</title>
 
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=final">
+    <link rel="apple-touch-icon" href="apple-icon.jpg?v=final">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="MyDiag-DTG">
+    <meta name="apple-mobile-web-app-title" content="MyDiag DTG">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#101844">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root { --adn-blue: #101844; --adn-gold: #c5a059; --bg: #f4f6f9; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); display: flex; flex-direction: column; height: 100vh; color: #333; -webkit-tap-highlight-color: transparent; }
         
-        /* Navigation */
         .tabs { display: flex; overflow-x: auto; background: var(--adn-blue); scrollbar-width: none; border-bottom: 3px solid var(--adn-gold); flex-shrink: 0; }
         .tabs::-webkit-scrollbar { display: none; }
         .tab { padding: 15px 15px; white-space: nowrap; cursor: pointer; color: white; opacity: 0.6; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
@@ -28,7 +28,6 @@
         .view { display: none; }
         .view.active { display: block; }
 
-        /* Accueil */
         .welcome-card { background: linear-gradient(135deg, var(--adn-blue) 0%, #1e2a5a 100%); color: white; border-radius: 12px; padding: 25px 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .welcome-card h1 { margin: 0; font-size: 1.8rem; letter-spacing: 1px; }
         .welcome-card p { margin: 5px 0 0 0; font-size: 0.9rem; opacity: 0.8; }
@@ -47,14 +46,17 @@
         .stat-box span { display: block; font-size: 2rem; font-weight: bold; color: var(--adn-gold); }
         .stat-box label { font-size: 0.75rem; color: var(--adn-blue); font-weight: bold; text-transform: uppercase; margin-top: 5px; display: block; }
 
-        /* BOUTONS GENERAUX */
         .btn-action { background: var(--adn-blue); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
         .btn-action:active { transform: scale(0.98); }
         .btn-lib { background: #546e7a; }
         .btn-save { background: #27ae60; padding: 15px; font-size: 1rem; margin-top: 10px; }
         .btn-start { background: var(--adn-gold); color: #fff; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(197, 160, 89, 0.3); padding: 15px; margin-top: 10px; }
 
-        /* LISTE CHECK-LIST OUVRAGES */
+        /* BUILDINGS LIST */
+        .building-item { display: flex; justify-content: space-between; align-items: center; background: #f4f6f9; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e1e4e8; }
+        .building-item strong { color: var(--adn-blue); }
+        .building-del { background: #e74c3c; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+
         .ouvrage-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #e1e4e8; border-left: 5px solid var(--adn-gold); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .ouvrage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .ouvrage-title { font-weight: bold; color: var(--adn-blue); font-size: 1rem; flex: 1; padding-right: 10px; }
@@ -66,13 +68,11 @@
         
         #canvas-hidden { display: none; }
 
-        /* EDITOR COMMENTAIRES (Reste en Overlay comme avant) */
         #editorOverlay { display: none; position: fixed; z-index: 9000; left: 0; top: 0; width: 100%; height: 100%; background: var(--bg); overflow-y: auto; padding: 20px; box-sizing: border-box; }
         .comment-list { max-height: 40vh; overflow-y: auto; margin-top: 15px; }
         .comment-item { background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.85rem; cursor: pointer; margin-bottom: 8px; line-height: 1.4; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .comment-item:active { background: #f0f4f8; border-color: var(--adn-gold); }
 
-        /* MODAL PLEIN ECRAN (VISIONNEUSE) */
         .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;}
         .modal-content { max-width: 100%; max-height: 50vh; border: 2px solid var(--adn-gold); border-radius: 8px; object-fit: contain; }
         .modal-close { position: absolute; top: 15px; right: 20px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; }
@@ -82,10 +82,7 @@
         .btn-update { background: #2980b9; }
         .btn-delete { background: #c0392b; }
 
-        /* VOYANT DE SAUVEGARDE */
-        #saveIndicator {
-            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); background: rgba(39, 174, 96, 0.95); color: white; padding: 10px 20px; border-radius: 25px; font-size: 0.9rem; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 10000; display: flex; align-items: center; gap: 8px;
-        }
+        #saveIndicator { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); background: rgba(39, 174, 96, 0.95); color: white; padding: 10px 20px; border-radius: 25px; font-size: 0.9rem; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 10000; display: flex; align-items: center; gap: 8px; }
         #saveIndicator.show { opacity: 1; }
     </style>
 </head>
@@ -98,7 +95,8 @@
 
 <div id="editorOverlay">
     <h2 id="editorTitle" style="color:var(--adn-blue); margin-top:0;">Rubrique</h2>
-    <p style="font-size: 0.85rem; color: #666; margin-top:-10px; margin-bottom:15px;">Sélectionnez un constat type ou complétez manuellement :</p>
+    <p id="editorBuildingName" style="color:var(--adn-gold); font-weight:bold; margin-top:-10px; margin-bottom:10px;"></p>
+    <p style="font-size: 0.85rem; color: #666; margin-top:0px; margin-bottom:15px;">Sélectionnez un constat type ou complétez manuellement :</p>
     <textarea id="finalTxt" rows="3" placeholder="Saisir un commentaire..."></textarea>
     <div id="commentList" class="comment-list"></div>
     <button class="btn-action btn-save" onclick="savePhoto()">💾 VALIDER ET INCRUSTER LA LÉGENDE</button>
@@ -151,7 +149,7 @@
             <h2>Identification de la mission</h2>
             <div class="input-group">
                 <label>N° de dossier (6 chiffres) :</label>
-                <input type="number" id="fileNumber" inputmode="numeric" pattern="[0-9]*" placeholder="000000" oninput="limit6(this)">
+                <input type="number" id="fileNumber" inputmode="numeric" pattern="[0-9]*" placeholder="000000" oninput="save()">
             </div>
             <div class="input-group">
                 <label>Nom de la Copropriété :</label>
@@ -167,12 +165,27 @@
             </div>
         </div>
 
+        <div class="card">
+            <h2>🏢 Bâtiments / Entrées</h2>
+            <div id="buildingListUI"></div>
+            
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <input type="text" id="newBuildingName" placeholder="Ex: Bâtiment B..." style="margin:0;">
+                <button class="btn-action" style="width:auto; margin:0; padding: 0 20px;" onclick="addBuilding()">➕ Ajouter</button>
+            </div>
+        </div>
+
         <button class="btn-action btn-start" onclick="showTab('ENVELOPPE ET STRUCTURE')">🚀 DÉMARRER L'INSPECTION</button>
     </div>
 
     <div id="view-SECTION" class="view">
-        <h2 id="secTitle" style="color:var(--adn-blue); font-size: 1.2rem; margin-top:0; border-bottom: 2px solid var(--adn-gold); padding-bottom:10px;">Rubrique</h2>
         
+        <div style="background:var(--adn-blue); border-radius:8px; padding:12px; margin-bottom:15px; color:white; display:flex; align-items:center; gap:10px;">
+            <label style="color:white; margin:0; flex-shrink:0;">📍 Inspecter :</label>
+            <select id="activeBuildingSelect" onchange="changeBuilding(this.value)" style="margin:0; padding:8px; font-weight:bold; border:none;"></select>
+        </div>
+
+        <h2 id="secTitle" style="color:var(--adn-blue); font-size: 1.2rem; margin-top:0; border-bottom: 2px solid var(--adn-gold); padding-bottom:10px;">Rubrique</h2>
         <div id="ouvragesContainer"></div>
     </div>
 
@@ -190,7 +203,6 @@
 <canvas id="canvas-hidden"></canvas>
 
 <script>
-    // ARBORESCENCE COMPLETE
     const DB = {
         'ENVELOPPE ET STRUCTURE': {
             'FONDATIONS': ["FONDATIONS : OK. Pas de désordres symptomatiques.", "Fissures d’allure oblique présumant un tassement."],
@@ -245,17 +257,75 @@
         }
     };
 
-    let state = { name: "", fileNum: "", address: "", inspector: "", photos: [] };
+    let state = { name: "", fileNum: "", address: "", inspector: "", buildings: ["Bâtiment Principal"], photos: [] };
     let currentSec = "";
-    let currentOuvrage = ""; // Permet de savoir quel ouvrage on est en train de photographier
+    let currentBuilding = "Bâtiment Principal";
+    let currentOuvrage = ""; 
     let currentModalIndex = -1; 
     let saveTimeout;
 
-    function limit6(el) {
-        if (el.value.length > 6) el.value = el.value.slice(0, 6);
-        save();
+    // --- INDEXED_DB ---
+    function initDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open("MyDiagDTG_Database", 1);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains("stateStore")) db.createObjectStore("stateStore", { keyPath: "id" });
+            };
+            request.onsuccess = (e) => resolve(e.target.result);
+            request.onerror = (e) => reject(e.target.error);
+        });
     }
 
+    // --- GESTION BATIMENTS ---
+    function renderBuildingUI() {
+        // Liste Dashboard
+        const listUI = document.getElementById('buildingListUI');
+        listUI.innerHTML = state.buildings.map((b, index) => `
+            <div class="building-item">
+                <strong>${b}</strong>
+                ${index > 0 ? `<button class="building-del" onclick="deleteBuilding('${b}')">Supprimer</button>` : `<span style="font-size:0.75rem; color:#888;">Défaut</span>`}
+            </div>
+        `).join('');
+
+        // Selecteur d'onglet
+        const selectUI = document.getElementById('activeBuildingSelect');
+        selectUI.innerHTML = state.buildings.map(b => `<option value="${b}" ${b === currentBuilding ? 'selected' : ''}>${b}</option>`).join('');
+    }
+
+    function addBuilding() {
+        const input = document.getElementById('newBuildingName');
+        const val = input.value.trim();
+        if(val && !state.buildings.includes(val)) {
+            state.buildings.push(val);
+            input.value = "";
+            save();
+            renderBuildingUI();
+        }
+    }
+
+    function deleteBuilding(bName) {
+        // Vérifie si des photos existent pour ce bâtiment
+        const photosInBuilding = state.photos.filter(p => p.building === bName).length;
+        if(photosInBuilding > 0) {
+            alert(`Impossible de supprimer : Ce bâtiment contient ${photosInBuilding} photo(s).`);
+            return;
+        }
+        if(confirm(`Supprimer ${bName} ?`)) {
+            state.buildings = state.buildings.filter(b => b !== bName);
+            if(currentBuilding === bName) currentBuilding = state.buildings[0];
+            save();
+            renderBuildingUI();
+            if(currentSec) renderOuvrages();
+        }
+    }
+
+    function changeBuilding(bName) {
+        currentBuilding = bName;
+        renderOuvrages();
+    }
+
+    // --- NAVIGATION ---
     function showTab(cat) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -265,7 +335,7 @@
             currentSec = cat;
             document.getElementById('view-SECTION').classList.add('active');
             document.getElementById('secTitle').innerText = cat;
-            renderOuvrages(); // On génère la check-list des ouvrages
+            renderOuvrages(); 
         } else {
             document.getElementById('view-' + cat).classList.add('active');
             updateDashStats();
@@ -281,29 +351,24 @@
         }
     }
 
-    // --- GENERATION DE LA CHECK-LIST DES OUVRAGES ---
     function renderOuvrages() {
         const container = document.getElementById('ouvragesContainer');
         let html = '';
 
         for (let ouvrage in DB[currentSec]) {
-            // On compte les photos déjà prises pour cet ouvrage
-            const photosOuvrage = state.photos.filter(p => p.sec === currentSec && p.sub === ouvrage);
+            // On filtre par Section ET par Bâtiment actif !
+            const photosOuvrage = state.photos.filter(p => p.sec === currentSec && p.sub === ouvrage && (p.building || "Bâtiment Principal") === currentBuilding);
             const count = photosOuvrage.length;
-            
-            // On gère la pastille (Rouge si 0, Vert si > 0)
             const badgeColor = count > 0 ? '#27ae60' : '#e74c3c';
             const badgeText = count > 0 ? `${count} photo(s)` : 'À FAIRE';
 
-            // On génère la galerie de miniatures pour cet ouvrage
             let galleryHtml = '';
             state.photos.forEach((p, i) => {
-                if (p.sec === currentSec && p.sub === ouvrage) {
+                if (p.sec === currentSec && p.sub === ouvrage && (p.building || "Bâtiment Principal") === currentBuilding) {
                     galleryHtml += `<img src="${p.b64}" onclick="openModal(${i})">`;
                 }
             });
 
-            // On construit la carte HTML pour cet ouvrage
             html += `
             <div class="ouvrage-card">
                 <div class="ouvrage-header">
@@ -317,13 +382,11 @@
                 ${galleryHtml !== '' ? `<div class="gallery">${galleryHtml}</div>` : ''}
             </div>`;
         }
-
         container.innerHTML = html;
     }
 
-    // Déclencheur appareil photo/galerie depuis la carte d'un ouvrage
     function takePhoto(ouvrage, type) {
-        currentOuvrage = ouvrage; // On mémorise sur quel ouvrage on travaille
+        currentOuvrage = ouvrage; 
         if (type === 'cam') {
             document.getElementById('globalCam').click();
         } else {
@@ -331,29 +394,23 @@
         }
     }
 
-    // Retour du fichier (Appareil ou Galerie)
+    // --- PHOTO / EDITION ---
     function onFile(e) {
         const file = e.target.files[0];
         if(!file) return;
         
-        // On affiche l'éditeur de commentaire
         document.getElementById('editorOverlay').style.display = 'block';
         document.getElementById('editorTitle').innerText = currentOuvrage;
+        document.getElementById('editorBuildingName').innerText = `(${currentBuilding})`;
         document.getElementById('finalTxt').value = "";
         
-        // On charge les commentaires types correspondants à cet ouvrage
-        loadComments();
-
-        // On conserve l'image BRUTE
-        const reader = new FileReader();
-        reader.onload = (ev) => { window.lastB64 = ev.target.result; };
-        reader.readAsDataURL(file);
-    }
-
-    function loadComments() {
         document.getElementById('commentList').innerHTML = DB[currentSec][currentOuvrage].map(c => 
             `<div class="comment-item" onclick="document.getElementById('finalTxt').value='${c.replace(/'/g, "\\'")}'">${c}</div>`
         ).join('');
+
+        const reader = new FileReader();
+        reader.onload = (ev) => { window.lastB64 = ev.target.result; };
+        reader.readAsDataURL(file);
     }
 
     function savePhoto() {
@@ -374,15 +431,16 @@
             ctx.fillText(document.getElementById('finalTxt').value, 25, 725);
             
             state.photos.push({ 
+                building: currentBuilding, // Enregistre le bâtiment ciblé
                 sec: currentSec, 
-                sub: currentOuvrage, // On utilise l'ouvrage mémorisé
+                sub: currentOuvrage, 
                 txt: document.getElementById('finalTxt').value, 
                 b64: cvs.toDataURL("image/png"),
                 raw: window.lastB64 
             });
             
             save(); 
-            renderOuvrages(); // On rafraîchit la check-list visuelle
+            renderOuvrages(); 
             document.getElementById('editorOverlay').style.display = 'none';
             document.getElementById('globalCam').value = "";
             document.getElementById('globalLib').value = "";
@@ -390,7 +448,6 @@
         img.src = window.lastB64;
     }
 
-    // --- FONCTIONS VISIONNEUSE ---
     function openModal(index) {
         currentModalIndex = index;
         document.getElementById('modalImg').src = state.photos[index].b64;
@@ -448,24 +505,32 @@
         img.src = p.raw; 
     }
 
-    // --- FONCTION DE SAUVEGARDE ET VOYANT ---
+    // --- SAUVEGARDE DB ---
     function triggerSaveToast() {
         const toast = document.getElementById('saveIndicator');
         toast.classList.add('show');
         clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-            toast.classList.remove('show');
-        }, 1500);
+        saveTimeout = setTimeout(() => { toast.classList.remove('show'); }, 1500);
     }
 
-    function save() {
+    async function save() {
+        if(document.getElementById('fileNumber').value.length > 6) {
+             document.getElementById('fileNumber').value = document.getElementById('fileNumber').value.slice(0, 6);
+        }
         state.name = document.getElementById('projName').value;
         state.fileNum = document.getElementById('fileNumber').value;
         state.address = document.getElementById('projAddress').value;
         state.inspector = document.getElementById('inspectorName').value;
-        localStorage.setItem('dtg_pro_no_ai', JSON.stringify(state));
+        
         updateDashStats();
         triggerSaveToast();
+
+        try {
+            const db = await initDB();
+            const tx = db.transaction("stateStore", "readwrite");
+            const store = tx.objectStore("stateStore");
+            store.put({ id: "dtg_current_state", data: state });
+        } catch(err) { console.error("Erreur DB :", err); }
     }
 
     // --- EXPORTS ---
@@ -477,33 +542,83 @@
             <p><strong>Copropriété :</strong> ${state.name || 'Non renseigné'}</p>
             <p><strong>Adresse :</strong> ${state.address || 'Non renseigné'}</p>
             <p><strong>Inspecteur :</strong> ${state.inspector || 'Non renseigné'}</p>
+            <p><strong>Bâtiments inspectés :</strong> ${state.buildings.join(', ')}</p>
             <p><strong>Date d'export :</strong> ${d}</p>
         </div>`;
         
-        state.photos.forEach(p => h += `<div style="background:white;padding:15px;margin-bottom:20px;border-radius:10px;"><h3>[${p.sec}] ${p.sub}</h3><img src="${p.b64}" style="max-width:800px; width:100%;"><p>${p.txt}</p></div>`);
+        // Tri par bâtiment pour que le rapport soit lisible
+        state.buildings.forEach(bldg => {
+            const photosBldg = state.photos.filter(p => (p.building || "Bâtiment Principal") === bldg);
+            if(photosBldg.length > 0) {
+                h += `<h2 style="color:#c5a059; border-bottom:2px solid #ccc; padding-bottom:10px; margin-top:40px;">🏢 ${bldg}</h2>`;
+                photosBldg.forEach(p => {
+                    h += `<div style="background:white;padding:15px;margin-bottom:20px;border-radius:10px;">
+                            <h3 style="margin-top:0; color:#101844;">[${p.sec}] ${p.sub}</h3>
+                            <img src="${p.b64}" style="max-width:800px; width:100%; border-radius:6px;">
+                            <p style="background:#f9f9f9; padding:10px; border-left:3px solid #c5a059;">${p.txt}</p>
+                          </div>`;
+                });
+            }
+        });
+        
         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([h + '</body></html>'], {type:'text/html'})); a.download = `RAPPORT_${state.fileNum || 'DTG'}.html`; a.click();
     }
 
     async function exportZIP() {
         const zip = new JSZip();
-        state.photos.forEach((p, i) => zip.file(`${p.sec}/${p.sub.replace(/[\/\\]/g, '_')}_${i}.png`, p.b64.split(',')[1], {base64: true}));
+        state.photos.forEach((p, i) => {
+            // Création de l'architecture : Bâtiment / Section / Poste.png
+            let safeBuilding = (p.building || "Bâtiment Principal").replace(/[\/\\]/g, '_');
+            let safeSec = p.sec.replace(/[\/\\]/g, '_');
+            let safeSub = p.sub.replace(/[\/\\]/g, '_');
+            zip.file(`${safeBuilding}/${safeSec}/${safeSub}_${i}.png`, p.b64.split(',')[1], {base64: true});
+        });
+        
         zip.generateAsync({type:"blob"}).then(b => {
             const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `PHOTOS_ADN_${state.fileNum || 'DTG'}.zip`; a.click();
         });
     }
 
-    function resetApp() { if(confirm("Attention, cela supprimera toutes les photos et les infos du dossier en cours. Continuer ?")) { localStorage.clear(); location.reload(); } }
+    async function resetApp() { 
+        if(confirm("Attention, cela supprimera TOUS les bâtiments et photos de ce dossier. Continuer ?")) { 
+            try {
+                const db = await initDB();
+                const tx = db.transaction("stateStore", "readwrite");
+                tx.objectStore("stateStore").clear();
+            } catch(e) {}
+            location.reload(); 
+        } 
+    }
 
-    window.onload = () => {
+    window.onload = async () => {
         document.getElementById('dashDate').innerText = new Date().toLocaleDateString('fr-FR');
-        const s = localStorage.getItem('dtg_pro_no_ai');
-        if(s) { 
-            state = JSON.parse(s); 
-            document.getElementById('projName').value = state.name || ""; 
-            document.getElementById('fileNumber').value = state.fileNum || ""; 
-            document.getElementById('projAddress').value = state.address || ""; 
-            document.getElementById('inspectorName').value = state.inspector || ""; 
-            updateDashStats();
+        try {
+            const db = await initDB();
+            const tx = db.transaction("stateStore", "readonly");
+            const store = tx.objectStore("stateStore");
+            const request = store.get("dtg_current_state");
+
+            request.onsuccess = () => {
+                if(request.result && request.result.data) {
+                    state = request.result.data;
+                    
+                    // Rétrocompatibilité : si ancien dossier sans bâtiment
+                    if(!state.buildings || state.buildings.length === 0) state.buildings = ["Bâtiment Principal"];
+                    currentBuilding = state.buildings[0];
+
+                    document.getElementById('projName').value = state.name || ""; 
+                    document.getElementById('fileNumber').value = state.fileNum || ""; 
+                    document.getElementById('projAddress').value = state.address || ""; 
+                    document.getElementById('inspectorName').value = state.inspector || ""; 
+                    
+                    renderBuildingUI();
+                    updateDashStats();
+                } else {
+                    renderBuildingUI();
+                }
+            };
+        } catch(err) {
+            renderBuildingUI();
         }
     };
 </script>
