@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <title>MyDiag DTG</title>
+    <title>MyDiag-DTG</title>
 
     <link rel="apple-touch-icon" href="apple-touch-icon.png?v=final">
     
@@ -78,7 +78,6 @@
         /* MODAL PLEIN ECRAN (VISIONNEUSE & DESSIN) */
         .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;}
         .modal-content { max-width: 100%; max-height: 50vh; border: 2px solid var(--adn-gold); border-radius: 8px; object-fit: contain; }
-        /* Canvas de dessin : On bloque les actions tactiles (zoom/scroll) pour pouvoir dessiner */
         #drawCanvas { touch-action: none; background: #000; } 
         .modal-close { position: absolute; top: 15px; right: 20px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; }
         .modal-edit-box { width: 100%; max-width: 500px; margin-top: 15px; }
@@ -96,6 +95,7 @@
 
 <input type="file" id="globalCam" accept="image/*" capture="environment" style="display:none" onchange="onFile(event)">
 <input type="file" id="globalLib" accept="image/*" style="display:none" onchange="onFile(event)">
+<input type="file" id="importProjectFile" accept=".mydiag,.json" style="display:none" onchange="importProject(event)">
 
 <div id="saveIndicator">✅ Sauvegardé</div>
 
@@ -208,6 +208,13 @@
     </div>
 
     <div id="view-EXPORT" class="view">
+        <div class="card">
+            <h2>💾 Sauvegarde / Restauration</h2>
+            <p style="font-size:0.85rem; color:#666;">Sauvegardez votre projet pour le reprendre plus tard ou sur un ordinateur.</p>
+            <button class="btn-action" style="background:#2980b9;" onclick="exportProject()">⬇️ TÉLÉCHARGER LE PROJET (.mydiag)</button>
+            <button class="btn-action" style="background:#8e44ad; margin-top:10px;" onclick="document.getElementById('importProjectFile').click()">⬆️ CHARGER UN PROJET</button>
+        </div>
+
         <div class="card">
             <h2>Fin de mission</h2>
             <p style="font-size:0.9rem; color:#666;">Photos prêtes à l'export : <strong id="photoCount">0</strong></p>
@@ -436,7 +443,6 @@
         document.getElementById('modalImg').src = state.photos[index].b64;
         document.getElementById('modalEditTxt').value = state.photos[index].txt; 
         
-        // S'assure que tout est en mode normal
         cancelAnnotation(); 
         document.getElementById('photoModal').style.display = "flex";
     }
@@ -488,12 +494,10 @@
         img.src = p.raw; 
     }
 
-    // -- LOGIQUE DE DESSIN (CANVAS) --
     const dCvs = document.getElementById('drawCanvas');
     const dCtx = dCvs.getContext('2d');
     let isDrawing = false;
 
-    // Events (Touch et Mouse)
     dCvs.addEventListener('mousedown', startPos);
     dCvs.addEventListener('touchstart', startPos, {passive: false});
     dCvs.addEventListener('mouseup', endPos);
@@ -502,7 +506,7 @@
     dCvs.addEventListener('touchmove', draw, {passive: false});
 
     function startPos(e) {
-        e.preventDefault(); // Empêche le défilement de l'écran pendant le dessin
+        e.preventDefault(); 
         isDrawing = true;
         draw(e);
     }
@@ -533,7 +537,7 @@
 
         dCtx.lineWidth = 8;
         dCtx.lineCap = 'round';
-        dCtx.strokeStyle = '#e74c3c'; // Rouge Vif
+        dCtx.strokeStyle = '#e74c3c'; 
 
         dCtx.lineTo(x, y);
         dCtx.stroke();
@@ -546,7 +550,6 @@
         let p = state.photos[currentModalIndex];
         if(!p.raw) { alert("Photo d'origine introuvable pour le dessin."); return; }
 
-        // Interface modification
         document.getElementById('modalImg').style.display = 'none';
         document.getElementById('textEditArea').style.display = 'none';
         document.getElementById('actionRowDefault').style.display = 'none';
@@ -554,7 +557,6 @@
         dCvs.style.display = 'block';
         document.getElementById('actionRowDraw').style.display = 'flex';
 
-        // Charge la photo brute dans le canvas de dessin
         const img = new Image();
         img.onload = () => {
             dCvs.width = 1000;
@@ -565,7 +567,6 @@
     }
 
     function cancelAnnotation() {
-        // Retour à la visionneuse normale
         dCvs.style.display = 'none';
         document.getElementById('actionRowDraw').style.display = 'none';
         document.getElementById('modalImg').style.display = 'block';
@@ -575,14 +576,12 @@
 
     function saveAnnotation() {
         let p = state.photos[currentModalIndex];
-        // Le dessin devient la nouvelle photo "brute"
         p.raw = dCvs.toDataURL('image/png'); 
         cancelAnnotation();
-        // On force la mise à jour (qui va rajouter le bandeau texte en bas)
         updateCurrentPhoto(); 
     }
 
-    // --- SAUVEGARDE VIA LOCALFORAGE ---
+    // --- SAUVEGARDE & IMPORT/EXPORT PROJET ---
     function triggerSaveToast() {
         const toast = document.getElementById('saveIndicator');
         toast.classList.add('show');
@@ -606,7 +605,52 @@
         catch(err) { console.error("Erreur LocalForage save :", err); }
     }
 
-    // --- EXPORTS ---
+    function exportProject() {
+        const dataStr = JSON.stringify(state);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Projet_${state.fileNum || 'DTG'}.mydiag`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function importProject(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const importedState = JSON.parse(e.target.result);
+                if (importedState && importedState.photos) {
+                    state = importedState;
+                    if(!state.buildings || state.buildings.length === 0) state.buildings = ["Bâtiment Principal"];
+                    currentBuilding = state.buildings[0];
+                    
+                    document.getElementById('projName').value = state.name || ""; 
+                    document.getElementById('fileNumber').value = state.fileNum || ""; 
+                    document.getElementById('projAddress').value = state.address || ""; 
+                    document.getElementById('inspectorName').value = state.inspector || ""; 
+
+                    await save();
+                    renderBuildingUI();
+                    updateDashStats();
+                    if (currentSec) renderOuvrages();
+                    
+                    alert("✅ Projet chargé avec succès !");
+                } else {
+                    alert("❌ Fichier invalide ou corrompu.");
+                }
+            } catch (err) {
+                alert("❌ Erreur lors de la lecture du fichier.");
+            }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    // --- EXPORTS HTML & ZIP ---
     function exportHTML() {
         const d = new Date().toLocaleDateString('fr-FR');
         let h = `<html><body style="font-family:sans-serif;padding:30px;background:#f0f0f0;">
